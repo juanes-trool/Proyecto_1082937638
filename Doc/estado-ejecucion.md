@@ -512,7 +512,7 @@ Rama main protegida             : ✅
 CI pasa en main                 : ✅
 Error TS bloqueado por CI       : ✅
 Badge en README                 : ✅
-Commit hash final del proyecto  : [pendiente - se completará en commit final]
+Commit hash final del proyecto  : 5b1116d
 ```
 
 ### Criterios de validación
