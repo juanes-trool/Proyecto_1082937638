@@ -1,12 +1,8 @@
 {
-  "site": {
-    "name": "Mi Proyecto",
-    "description": "Fullstack TypeScript con Vercel",
+  "app": {
+    "name": "Mi App Fullstack TS",
     "version": "1.0.0",
-    "author": "Juan Gonzalez"
-  },
-  "theme": {
-    "primaryColor": "#0070f3",
-    "fontFamily": "Inter"
+    "locale": "es-CO",
+    "theme": "dark"
   }
 }
