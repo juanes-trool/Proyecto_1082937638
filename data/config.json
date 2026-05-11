@@ -1,0 +1,12 @@
+{
+  "site": {
+    "name": "Mi Proyecto",
+    "description": "Fullstack TypeScript con Vercel",
+    "version": "1.0.0",
+    "author": "Juan Gonzalez"
+  },
+  "theme": {
+    "primaryColor": "#0070f3",
+    "fontFamily": "Inter"
+  }
+}

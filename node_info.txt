@@ -1,0 +1,4 @@
+node:  
+v24.14.1
+11.11.0
+git version 2.53.0.windows.1

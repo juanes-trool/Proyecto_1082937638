@@ -1,0 +1,40 @@
+{
+  "users": [
+    {
+      "email": "admin@sgib.com",
+      "password_hash": "$2b$10$6HAXEuWqEU0lqVlmM/TZ2O8JsIqkLl9vwl9j8e0zJkBlb7AJu8ycm",
+      "name": "Administrador",
+      "role": "admin",
+      "must_change_password": false
+    }
+  ],
+  "system_config": {
+    "default_min_stock": 5
+  },
+  "categories": [
+    {
+      "name": "Maquillaje",
+      "description": "Bases, labiales, sombras y más"
+    },
+    {
+      "name": "Skincare",
+      "description": "Cremas, sueros y cuidado de la piel"
+    },
+    {
+      "name": "Cabello",
+      "description": "Shampoos, acondicionadores y tratamientos"
+    },
+    {
+      "name": "Uñas",
+      "description": "Esmaltes, geles y accesorios"
+    },
+    {
+      "name": "Fragancias",
+      "description": "Perfumes y colonias"
+    },
+    {
+      "name": "Accesorios",
+      "description": "Esponjas, brochas y herramientas"
+    }
+  ]
+}

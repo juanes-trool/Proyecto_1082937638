@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility classes */
+.gradient-primary {
+  @apply bg-gradient-to-r from-pink-500 to-fuchsia-600;
+}
+
+.gradient-primary-hover {
+  @apply hover:from-pink-600 hover:to-fuchsia-700;
+}
+
+.text-gradient-primary {
+  @apply bg-gradient-to-r from-pink-500 to-fuchsia-600 bg-clip-text text-transparent;
+}
+
+/* Button reset */
+button {
+  @apply font-medium transition-all duration-200;
+}
+
+/* Input focus styles */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply outline-none ring-2 ring-offset-2 ring-pink-500;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    @apply opacity-0;
+  }
+  to {
+    @apply opacity-100;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    @apply translate-y-4 opacity-0;
+  }
+  to {
+    @apply translate-y-0 opacity-100;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.3s ease-out;
+}
+
