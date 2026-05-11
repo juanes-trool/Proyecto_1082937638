@@ -8,3 +8,4 @@ export { Toast, useToast } from './Toast';
 export { Modal } from './Modal';
 export { EmptyState } from './EmptyState';
 export { Table, TableHead, TableBody, TableRow, TableCell, TableHeaderCell } from './Table';
+export { default as HolaMundo } from './HolaMundo';
