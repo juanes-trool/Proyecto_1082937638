@@ -1,6 +1,6 @@
 # Mi App Fullstack TS
 
-![CI](https://github.com/Ksanchz07/proyecto_1082894414/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/juanes-trool/Proyecto_1082937638/actions/workflows/ci.yml/badge.svg)
 
 Sistema fullstack con TypeScript, Next.js, Vercel y JSON como base de datos.
 
@@ -16,7 +16,7 @@ Sistema fullstack con TypeScript, Next.js, Vercel y JSON como base de datos.
 ## URLs
 
 - **Producción:** https://mi-app-fullstack-ts.vercel.app
-- **Repositorio:** https://github.com/Ksanchz07/proyecto_1082894414
+- **Repositorio:** https://github.com/juanes-trool/Proyecto_1082937638
 
 ## Scripts
 
