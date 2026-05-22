@@ -6,21 +6,34 @@
 // AUTHENTICATION & USERS
 // ============================================================================
 
+export type UserRole = 'admin' | 'empleado';
+
 export interface User {
-  id: number;
+  id: string; // UUID
+  name: string;
   email: string;
   password_hash: string;
-  name: string;
-  role: 'admin' | 'employee';
+  role: UserRole;
+  is_active: boolean;
   must_change_password: boolean;
+  last_login_at: string | null;
   created_at: string;
-  updated_at: string;
 }
 
-export type UserRole = 'admin' | 'employee';
+/** Usuario sin datos sensibles — para listados y respuestas API */
+export interface SafeUser {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  is_active: boolean;
+  must_change_password: boolean;
+  last_login_at: string | null;
+  created_at: string;
+}
 
 export interface AuthPayload {
-  userId: number;
+  userId: string; // UUID
   email: string;
   name: string;
   role: UserRole;
@@ -36,17 +49,25 @@ export interface LoginRequest {
 export interface LoginResponse {
   success: boolean;
   message?: string;
-  user?: {
-    id: number;
-    email: string;
-    name: string;
-    role: UserRole;
-  };
+  user?: SafeUser;
 }
 
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
+}
+
+export interface CreateUserRequest {
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+export interface UpdateUserRequest {
+  name?: string;
+  email?: string;
+  role?: UserRole;
+  is_active?: boolean;
 }
 
 // ============================================================================
@@ -55,10 +76,13 @@ export interface ChangePasswordRequest {
 
 export interface SystemConfig {
   id: number;
-  key: string;
-  value: string;
-  created_at: string;
+  default_min_stock: number;
+  updated_by: string | null;
   updated_at: string;
+}
+
+export interface UpdateConfigRequest {
+  default_min_stock: number;
 }
 
 export type SystemMode = 'seed' | 'live';
@@ -68,16 +92,16 @@ export type SystemMode = 'seed' | 'live';
 // ============================================================================
 
 export interface Category {
-  id: number;
+  id: string; // UUID
   name: string;
-  description: string;
+  description: string | null;
+  is_active: boolean;
   created_at: string;
-  updated_at: string;
 }
 
 export interface CreateCategoryRequest {
   name: string;
-  description: string;
+  description?: string;
 }
 
 export interface UpdateCategoryRequest {
@@ -90,60 +114,67 @@ export interface UpdateCategoryRequest {
 // ============================================================================
 
 export interface Product {
-  id: number;
+  id: string; // UUID
+  category_id: string;
   name: string;
-  brand: string;
-  description: string;
-  category_id: number;
+  description: string | null;
+  brand: string | null;
   price: number;
   current_stock: number;
   min_stock: number;
   image_url: string | null;
+  is_active: boolean;
+  created_by: string | null;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface ProductWithStatus extends Product {
-  is_available: boolean;
+  is_available: boolean; // calculado: current_stock > 0 — RN-04
 }
 
 export interface PublicProduct {
-  id: number;
+  id: string;
   name: string;
-  brand: string;
-  description: string;
-  category: Category;
+  brand: string | null;
+  description: string | null;
+  category_id: string;
+  category_name: string;
   price: number;
   image_url: string | null;
-}
-
-export interface PublicProductWithStatus extends PublicProduct {
-  is_available: boolean;
+  is_available: boolean; // calculado
 }
 
 export interface CreateProductRequest {
+  category_id: string;
   name: string;
-  brand: string;
-  description: string;
-  category_id: number;
+  description?: string;
+  brand?: string;
   price: number;
   current_stock: number;
-  min_stock: number;
+  min_stock?: number;
 }
 
 export interface UpdateProductRequest {
+  category_id?: string;
   name?: string;
-  brand?: string;
   description?: string;
-  category_id?: number;
+  brand?: string;
   price?: number;
   min_stock?: number;
 }
 
-export interface StockAdjustmentRequest {
-  type: 'in' | 'out';
+export interface AdjustStockRequest {
+  type: 'entrada' | 'salida';
   quantity: number;
   reason: string;
+}
+
+export interface InventoryFilters {
+  category_id?: string;
+  search?: string;
+  in_stock?: boolean;
 }
 
 // ============================================================================
@@ -153,74 +184,110 @@ export interface StockAdjustmentRequest {
 export type OrderStatus = 'pendiente' | 'en_proceso' | 'entregado' | 'cancelado';
 
 export interface Order {
-  id: number;
-  customer_name: string;
-  customer_phone: string;
-  customer_address: string;
-  product_id: number;
+  id: string; // UUID
+  product_id: string | null;
+  product_name_snapshot: string;
+  unit_price_snapshot: number;
   quantity: number;
-  observations: string | null;
+  total: number;
+  customer_name: string;
+  phone: string;
+  address: string;
+  notes: string | null;
   status: OrderStatus;
+  updated_by: string | null;
   created_at: string;
   updated_at: string;
 }
 
 export interface OrderWithProduct extends Order {
-  product: Product;
+  product?: Product;
 }
 
 export interface PlaceOrderRequest {
-  customer_name: string;
-  customer_phone: string;
-  customer_address: string;
-  product_id: number;
+  productId: string;
   quantity: number;
-  observations?: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  notes?: string;
 }
 
-export interface PlaceOrderResponse {
-  success: boolean;
-  order_id?: number;
-  message?: string;
+export interface OrderFilters {
+  status?: OrderStatus;
+  from?: string;
+  to?: string;
+  product_id?: string;
 }
 
-export interface UpdateOrderStatusRequest {
-  status: OrderStatus;
+// ============================================================================
+// REPORTS
+// ============================================================================
+
+export interface InventoryReportRow {
+  id: string;
+  name: string;
+  brand: string | null;
+  category_name: string;
+  current_stock: number;
+  min_stock: number;
+  price: number;
+  is_available: boolean;
+}
+
+export interface TopProductRow {
+  product_name_snapshot: string;
+  total_quantity: number;
+  order_count: number;
+}
+
+export interface OrderReportRow {
+  created_at: string;
+  product_name_snapshot: string;
+  customer_name: string;
+  quantity: number;
+  unit_price_snapshot: number;
+  total: number;
 }
 
 // ============================================================================
 // API RESPONSES
 // ============================================================================
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   message?: string;
   error?: string;
-  timestamp?: string;
-}
-
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
 }
 
 // ============================================================================
 // AUDIT
 // ============================================================================
 
+export type AuditAction =
+  | 'login' | 'logout'
+  | 'create_product' | 'update_product' | 'delete_product'
+  | 'adjust_stock'
+  | 'create_category' | 'update_category' | 'delete_category'
+  | 'place_order'
+  | 'update_order_status'
+  | 'update_config' | 'create_user' | 'toggle_user'
+  | 'bootstrap';
+
+export type AuditEntity = 'product' | 'category' | 'order' | 'user' | 'system';
+
 export interface AuditEntry {
+  id: string;
   timestamp: string;
-  userId?: number;
-  userEmail?: string;
-  action: string;
-  resource: string;
-  resourceId?: number;
-  changes?: Record<string, any>;
-  ipAddress?: string;
+  user_id?: string;
+  user_email?: string;
+  user_role?: 'admin' | 'empleado' | 'public';
+  action: AuditAction;
+  entity: AuditEntity;
+  entity_id?: string;
+  summary: string;
+  metadata?: Record<string, unknown>;
 }
 
 // ============================================================================

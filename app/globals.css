@@ -2,9 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== PALETA SGIB — Sistema de Gestión de Inventario de Belleza ===== */
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
+  /* Colores base */
+  --background: #FFF8FA;
+  --foreground: #1F2937;
+
+  /* Primario (rosa) */
+  --color-primary:        #F43F5E;
+  --color-primary-dark:   #E11D48;
+  --color-primary-light:  #FFF1F2;
+
+  /* Acento (fuchsia) */
+  --color-accent:         #D946EF;
+
+  /* Texto */
+  --color-text:           #1F2937;
+  --color-text-secondary: #6B7280;
+
+  /* Tarjetas / fondos */
+  --color-card:           #FFFFFF;
+  --color-border:         #FCE7F3;
+
+  /* Stock */
+  --color-stock-in:       #16A34A;
+  --color-stock-out:      #DC2626;
+  --color-stock-low:      #D97706;
+
+  /* Pedidos */
+  --color-order-pending:  #7C3AED;
+  --color-order-process:  #2563EB;
+  --color-order-done:     #16A34A;
+  --color-order-cancel:   #DC2626;
+
+  /* Banner seed */
+  --color-seed-bg:        #FEF3C7;
+  --color-seed-text:      #92400E;
+  --color-seed-border:    #F59E0B;
 }
 
 *,
@@ -19,7 +53,6 @@ html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

@@ -1,468 +1,557 @@
-// lib/dataService.ts
-// Unified data access layer - ONLY point of access to data
-
+﻿// lib/dataService.ts
+// Capa de datos unificada — UNICO punto de acceso a datos del SGIB
 import { supabaseClient, supabaseServiceClient, isSupabaseConfigured } from './supabase';
 import { isDatabaseInitialized } from './pgMigrate';
 import { getSeedUsers, getSeedSystemConfig, getSeedCategories } from './seedReader';
 import { recordAuditEntry } from './blobAudit';
-import { User, Category, SystemConfig } from './types';
-
-// Determine system mode
+import { uploadProductImage, deleteProductImage } from './blobImages';
+import {
+  User, SafeUser, Category, SystemConfig, AuditEntry,
+  Product, ProductWithStatus, PublicProduct,
+  CreateProductRequest, UpdateProductRequest, AdjustStockRequest, InventoryFilters,
+} from './types';
+// ---------------------------------------------------------------------------
+// Modo del sistema
+// ---------------------------------------------------------------------------
+const SEED_ADMIN_ID = '00000000-0000-0000-0000-000000000001';
 let systemMode: 'seed' | 'live' | null = null;
-
-/**
- * Get current system mode (seed or live)
- * In seed mode: only admin login from seed.json, no writes
- * In live mode: full database operations
- */
 export const getSystemMode = async (): Promise<'seed' | 'live'> => {
-  if (systemMode) {
-    return systemMode;
-  }
-
+  if (systemMode) return systemMode;
   if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured, using seed mode');
     systemMode = 'seed';
     return systemMode;
   }
-
   try {
-    const isInitialized = await isDatabaseInitialized();
-    systemMode = isInitialized ? 'live' : 'seed';
+    const initialized = await isDatabaseInitialized();
+    systemMode = initialized ? 'live' : 'seed';
     return systemMode;
-  } catch (error) {
-    console.error('Error determining system mode:', error);
+  } catch {
     systemMode = 'seed';
     return systemMode;
   }
 };
-
-/**
- * Force reset system mode cache (for testing or after bootstrap)
- */
-export const resetSystemMode = () => {
-  systemMode = null;
-};
-
-// ============================================================================
-// AUTHENTICATION
-// ============================================================================
-
-/**
- * Find user by email
- * In seed mode: searches seed.json
- * In live mode: queries Supabase
- */
+export const resetSystemMode = () => { systemMode = null; };
+// ---------------------------------------------------------------------------
+// AUTENTICACION Y USUARIOS
+// ---------------------------------------------------------------------------
 export const findUserByEmail = async (email: string): Promise<User | null> => {
   const mode = await getSystemMode();
-
   if (mode === 'seed') {
-    const users = getSeedUsers();
-    const user = users.find((u) => u.email === email);
-    if (user) {
-      return {
-        id: 1,
-        email: user.email,
-        password_hash: user.password_hash,
-        name: user.name,
-        role: user.role as any,
-        must_change_password: user.must_change_password || false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-    }
-    return null;
+    const u = getSeedUsers().find((x) => x.email === email);
+    if (!u) return null;
+    return {
+      id: SEED_ADMIN_ID,
+      name: u.name,
+      email: u.email,
+      password_hash: u.password_hash,
+      role: 'admin',
+      is_active: true,
+      must_change_password: u.must_change_password ?? false,
+      last_login_at: null,
+      created_at: new Date().toISOString(),
+    };
   }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single();
-
-    if (error || !data) {
-      return null;
-    }
-
-    return data as User;
-  } catch (error) {
-    console.error('Error finding user by email:', error);
-    return null;
-  }
+  const { data, error } = await supabaseClient.from('users').select('*').eq('email', email).single();
+  if (error || !data) return null;
+  return data as User;
 };
-
-/**
- * Find user by ID
- */
-export const findUserById = async (id: number): Promise<User | null> => {
+export const findUserById = async (id: string): Promise<User | null> => {
   const mode = await getSystemMode();
-
   if (mode === 'seed') {
-    // In seed mode, only the admin user (id=1) exists
-    if (id === 1) {
-      const users = getSeedUsers();
-      const user = users[0];
-      if (user) {
-        return {
-          id: 1,
-          email: user.email,
-          password_hash: user.password_hash,
-          name: user.name,
-          role: user.role as any,
-          must_change_password: user.must_change_password || false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-      }
-    }
-    return null;
+    if (id !== SEED_ADMIN_ID) return null;
+    const u = getSeedUsers()[0];
+    if (!u) return null;
+    return {
+      id: SEED_ADMIN_ID,
+      name: u.name,
+      email: u.email,
+      password_hash: u.password_hash,
+      role: 'admin',
+      is_active: true,
+      must_change_password: u.must_change_password ?? false,
+      last_login_at: null,
+      created_at: new Date().toISOString(),
+    };
   }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('users')
-      .select('*')
-      .eq('id', id)
-      .single();
-
-    if (error || !data) {
-      return null;
-    }
-
-    return data as User;
-  } catch (error) {
-    console.error('Error finding user by ID:', error);
-    return null;
-  }
+  const { data, error } = await supabaseClient.from('users').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return data as User;
 };
-
-/**
- * Create a new user (live mode only)
- */
 export const createUser = async (
+  name: string,
   email: string,
   passwordHash: string,
-  name: string,
-  role: 'admin' | 'employee'
+  role: 'admin' | 'empleado'
 ): Promise<User | null> => {
   const mode = await getSystemMode();
-
-  if (mode === 'seed') {
-    console.warn('Cannot create users in seed mode');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('users')
-      .insert({
-        email,
-        password_hash: passwordHash,
-        name,
-        role,
-        must_change_password: false,
-      })
-      .select()
-      .single();
-
-    if (error || !data) {
-      console.error('Error creating user:', error);
-      return null;
-    }
-
-    return data as User;
-  } catch (error) {
-    console.error('Error creating user:', error);
-    return null;
-  }
+  if (mode === 'seed') return null;
+  const { data, error } = await supabaseServiceClient
+    .from('users')
+    .insert({ name, email, password_hash: passwordHash, role, must_change_password: true })
+    .select()
+    .single();
+  if (error || !data) { console.error('Error creando usuario:', error); return null; }
+  return data as User;
 };
-
-/**
- * Update user password
- */
-export const updateUserPassword = async (
-  userId: number,
-  newPasswordHash: string
-): Promise<boolean> => {
+export const updateUserPassword = async (userId: string, newPasswordHash: string): Promise<boolean> => {
   const mode = await getSystemMode();
-
-  if (mode === 'seed') {
-    console.warn('Cannot update users in seed mode');
-    return false;
-  }
-
-  try {
-    const { error } = await supabaseClient
-      .from('users')
-      .update({
-        password_hash: newPasswordHash,
-        must_change_password: false,
-      })
-      .eq('id', userId);
-
-    if (error) {
-      console.error('Error updating password:', error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error updating password:', error);
-    return false;
-  }
+  if (mode === 'seed') return false;
+  const { error } = await supabaseServiceClient
+    .from('users')
+    .update({ password_hash: newPasswordHash, must_change_password: false })
+    .eq('id', userId);
+  return !error;
 };
-
-// ============================================================================
-// SYSTEM CONFIG
-// ============================================================================
-
-/**
- * Get system configuration
- */
-export const getSystemConfig = async (): Promise<Record<string, any>> => {
+export const listUsers = async (): Promise<SafeUser[]> => {
   const mode = await getSystemMode();
-
   if (mode === 'seed') {
-    return getSeedSystemConfig();
+    const u = getSeedUsers()[0];
+    if (!u) return [];
+    return [{
+      id: SEED_ADMIN_ID,
+      name: u.name,
+      email: u.email,
+      role: 'admin',
+      is_active: true,
+      must_change_password: u.must_change_password ?? false,
+      last_login_at: null,
+      created_at: new Date().toISOString(),
+    }];
   }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('system_config')
-      .select('key, value');
-
-    if (error) {
-      console.error('Error getting system config:', error);
-      return {};
-    }
-
-    const config: Record<string, any> = {};
-    for (const row of data || []) {
-      config[row.key] = JSON.parse(row.value);
-    }
-
-    return config;
-  } catch (error) {
-    console.error('Error getting system config:', error);
-    return {};
-  }
+  const { data, error } = await supabaseClient
+    .from('users')
+    .select('id,name,email,role,is_active,must_change_password,last_login_at,created_at')
+    .order('created_at', { ascending: true });
+  if (error || !data) return [];
+  return data as SafeUser[];
 };
-
-/**
- * Get single config value
- */
-export const getConfigValue = async (key: string): Promise<any> => {
-  const config = await getSystemConfig();
-  return config[key];
-};
-
-/**
- * Set config value (live mode only)
- */
-export const setConfigValue = async (key: string, value: any): Promise<boolean> => {
+// ---------------------------------------------------------------------------
+// CONFIGURACION DEL SISTEMA
+// ---------------------------------------------------------------------------
+export const getSystemConfig = async (): Promise<SystemConfig | null> => {
   const mode = await getSystemMode();
-
   if (mode === 'seed') {
-    console.warn('Cannot set config in seed mode');
-    return false;
+    const cfg = getSeedSystemConfig() as { default_min_stock?: number };
+    return {
+      id: 1,
+      default_min_stock: cfg.default_min_stock ?? 5,
+      updated_by: null,
+      updated_at: new Date().toISOString(),
+    };
   }
-
-  try {
-    const { error } = await supabaseClient
-      .from('system_config')
-      .upsert({
-        key,
-        value: JSON.stringify(value),
-      });
-
-    if (error) {
-      console.error('Error setting config:', error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error setting config:', error);
-    return false;
-  }
+  const { data, error } = await supabaseClient
+    .from('system_config')
+    .select('*')
+    .order('id', { ascending: true })
+    .limit(1)
+    .single();
+  if (error || !data) return null;
+  return data as SystemConfig;
 };
-
-// ============================================================================
-// CATEGORIES
-// ============================================================================
-
-/**
- * Get all categories
- */
+export const updateSystemConfig = async (userId: string, default_min_stock: number): Promise<boolean> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return false;
+  const { error } = await supabaseServiceClient
+    .from('system_config')
+    .update({ default_min_stock, updated_by: userId, updated_at: new Date().toISOString() })
+    .eq('id', 1);
+  return !error;
+};
+// ---------------------------------------------------------------------------
+// CATEGORIAS
+// ---------------------------------------------------------------------------
 export const getCategories = async (): Promise<Category[]> => {
   const mode = await getSystemMode();
-
   if (mode === 'seed') {
-    const seedCategories = getSeedCategories();
-    return seedCategories.map((cat, index) => ({
-      id: index + 1,
+    return getSeedCategories().map((cat, i) => ({
+      id: `seed-category-${i + 1}`,
       name: cat.name,
-      description: cat.description,
+      description: cat.description ?? null,
+      is_active: true,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     }));
   }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('categories')
-      .select('*')
-      .order('name', { ascending: true });
-
-    if (error) {
-      console.error('Error getting categories:', error);
-      return [];
-    }
-
-    return (data || []) as Category[];
-  } catch (error) {
-    console.error('Error getting categories:', error);
-    return [];
-  }
+  const { data, error } = await supabaseClient
+    .from('categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('name', { ascending: true });
+  if (error) { console.error('Error obteniendo categorias:', error); return []; }
+  return (data ?? []) as Category[];
 };
-
-/**
- * Get category by ID
- */
-export const getCategoryById = async (id: number): Promise<Category | null> => {
+export const getCategoryById = async (id: string): Promise<Category | null> => {
   const categories = await getCategories();
-  return categories.find((c) => c.id === id) || null;
+  return categories.find((c) => c.id === id) ?? null;
 };
-
-/**
- * Create category (live mode only)
- */
-export const createCategory = async (
-  name: string,
-  description: string
-): Promise<Category | null> => {
+export const createCategory = async (name: string, description: string): Promise<Category | null> => {
   const mode = await getSystemMode();
-
-  if (mode === 'seed') {
-    console.warn('Cannot create categories in seed mode');
-    return null;
-  }
-
-  try {
-    const { data, error } = await supabaseClient
-      .from('categories')
-      .insert({ name, description })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating category:', error);
-      return null;
-    }
-
-    return data as Category;
-  } catch (error) {
-    console.error('Error creating category:', error);
-    return null;
-  }
+  if (mode === 'seed') return null;
+  const { data, error } = await supabaseServiceClient
+    .from('categories')
+    .insert({ name, description })
+    .select()
+    .single();
+  if (error || !data) { console.error('Error creando categoria:', error); return null; }
+  return data as Category;
 };
-
-/**
- * Update category
- */
-export const updateCategory = async (
-  id: number,
-  name?: string,
-  description?: string
-): Promise<Category | null> => {
+export const updateCategory = async (id: string, name?: string, description?: string): Promise<Category | null> => {
   const mode = await getSystemMode();
-
-  if (mode === 'seed') {
-    console.warn('Cannot update categories in seed mode');
-    return null;
-  }
-
-  try {
-    const updates: Record<string, any> = {};
-    if (name) updates.name = name;
-    if (description) updates.description = description;
-
-    const { data, error } = await supabaseClient
-      .from('categories')
-      .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error updating category:', error);
-      return null;
-    }
-
-    return data as Category;
-  } catch (error) {
-    console.error('Error updating category:', error);
-    return null;
-  }
+  if (mode === 'seed') return null;
+  const updates: Record<string, unknown> = {};
+  if (name !== undefined) updates.name = name;
+  if (description !== undefined) updates.description = description;
+  const { data, error } = await supabaseServiceClient
+    .from('categories').update(updates).eq('id', id).select().single();
+  if (error || !data) { console.error('Error actualizando categoria:', error); return null; }
+  return data as Category;
 };
-
-/**
- * Delete category
- */
-export const deleteCategory = async (id: number): Promise<boolean> => {
+export const deleteCategory = async (id: string): Promise<boolean> => {
   const mode = await getSystemMode();
+  if (mode === 'seed') return false;
+  const { count } = await supabaseClient
+    .from('products')
+    .select('id', { count: 'exact', head: true })
+    .eq('category_id', id)
+    .eq('is_active', true);
+  if (count && count > 0) return false;
+  const { error } = await supabaseServiceClient.from('categories').delete().eq('id', id);
+  return !error;
+};
+// ---------------------------------------------------------------------------
+// PRODUCTOS — helpers internos
+// ---------------------------------------------------------------------------
 
-  if (mode === 'seed') {
-    console.warn('Cannot delete categories in seed mode');
-    return false;
-  }
+const toProductWithStatus = (p: Product): ProductWithStatus => ({
+  ...p,
+  is_available: p.current_stock > 0, // RN-04: calculado, nunca en DB
+});
 
-  try {
-    const { error } = await supabaseClient.from('categories').delete().eq('id', id);
+// ---------------------------------------------------------------------------
+// CATÁLOGO PÚBLICO (sin autenticación)
+// ---------------------------------------------------------------------------
 
-    if (error) {
-      console.error('Error deleting category:', error);
-      return false;
-    }
+export const getPublicCatalog = async (categoryId?: string): Promise<PublicProduct[]> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return [];
 
-    return true;
-  } catch (error) {
-    console.error('Error deleting category:', error);
-    return false;
-  }
+  let query = supabaseClient
+    .from('products')
+    .select(`
+      id, name, brand, description, price, current_stock, image_url,
+      category_id,
+      categories!inner ( name )
+    `)
+    .eq('is_active', true)
+    .order('name', { ascending: true });
+
+  if (categoryId) query = query.eq('category_id', categoryId);
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+
+  return (data as Array<{
+    id: string; name: string; brand: string | null; description: string | null;
+    price: number; current_stock: number; image_url: string | null;
+    category_id: string; categories: { name: string } | null;
+  }>).map((p) => ({
+    id: p.id,
+    name: p.name,
+    brand: p.brand,
+    description: p.description,
+    price: p.price,
+    image_url: p.image_url,
+    category_id: p.category_id,
+    category_name: p.categories?.name ?? '',
+    is_available: p.current_stock > 0,
+    current_stock: p.current_stock,
+  }));
 };
 
-// ============================================================================
-// AUDIT
-// ============================================================================
+export const getPublicProductById = async (id: string): Promise<PublicProduct | null> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return null;
 
-/**
- * Record an audit entry
- */
-export const recordAudit = async (entry: any): Promise<void> => {
+  const { data, error } = await supabaseClient
+    .from('products')
+    .select(`
+      id, name, brand, description, price, current_stock, image_url,
+      category_id,
+      categories!inner ( name )
+    `)
+    .eq('id', id)
+    .eq('is_active', true)
+    .single();
+
+  if (error || !data) return null;
+
+  const p = data as {
+    id: string; name: string; brand: string | null; description: string | null;
+    price: number; current_stock: number; image_url: string | null;
+    category_id: string; categories: { name: string } | null;
+  };
+
+  return {
+    id: p.id,
+    name: p.name,
+    brand: p.brand,
+    description: p.description,
+    price: p.price,
+    image_url: p.image_url,
+    category_id: p.category_id,
+    category_name: p.categories?.name ?? '',
+    is_available: p.current_stock > 0,
+    current_stock: p.current_stock,
+  };
+};
+
+// ---------------------------------------------------------------------------
+// INVENTARIO (autenticado)
+// ---------------------------------------------------------------------------
+
+export const getInventory = async (filters?: InventoryFilters): Promise<ProductWithStatus[]> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return [];
+
+  let query = supabaseClient
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .order('name', { ascending: true });
+
+  if (filters?.category_id) query = query.eq('category_id', filters.category_id);
+  if (filters?.search) query = query.ilike('name', `%${filters.search}%`);
+  if (filters?.in_stock) query = query.gt('current_stock', 0);
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+
+  return (data as Product[]).map(toProductWithStatus);
+};
+
+export const getProductById = async (id: string): Promise<ProductWithStatus | null> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return null;
+
+  const { data, error } = await supabaseClient
+    .from('products')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error || !data) return null;
+  return toProductWithStatus(data as Product);
+};
+
+export const createProduct = async (
+  userId: string,
+  data: CreateProductRequest,
+  imageBuffer?: Buffer,
+  imageName?: string,
+  imageType?: string,
+): Promise<Product | null> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return null;
+
+  const insertData: Record<string, unknown> = {
+    ...data,
+    created_by: userId,
+    updated_by: userId,
+  };
+
+  const { data: created, error } = await supabaseServiceClient
+    .from('products')
+    .insert(insertData)
+    .select()
+    .single();
+
+  if (error || !created) {
+    if ((error as { code?: string } | null)?.code === '23505') {
+      throw new Error('DUPLICATE_NAME'); // RN-01
+    }
+    console.error('Error creando producto:', error);
+    return null;
+  }
+
+  const product = created as Product;
+
+  // Subir imagen si se proporcionó
+  if (imageBuffer && imageName && imageType) {
+    const imageUrl = await uploadProductImage(product.id, imageName, imageBuffer, imageType);
+    if (imageUrl) {
+      const { error: imgError } = await supabaseServiceClient
+        .from('products')
+        .update({ image_url: imageUrl })
+        .eq('id', product.id);
+      if (!imgError) product.image_url = imageUrl;
+    }
+  }
+
+  return product;
+};
+
+export const updateProduct = async (
+  id: string,
+  userId: string,
+  data: UpdateProductRequest,
+  imageBuffer?: Buffer,
+  imageName?: string,
+  imageType?: string,
+): Promise<Product | null> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return null;
+
+  // Obtener imagen actual para eliminarla si se sube una nueva
+  const existing = await getProductById(id);
+  if (!existing) return null;
+
+  const updateData: Record<string, unknown> = {
+    ...data,
+    updated_by: userId,
+    updated_at: new Date().toISOString(),
+  };
+
+  // Si hay nueva imagen, subirla y eliminar la anterior
+  if (imageBuffer && imageName && imageType) {
+    const newImageUrl = await uploadProductImage(id, imageName, imageBuffer, imageType);
+    if (newImageUrl) {
+      if (existing.image_url) await deleteProductImage(existing.image_url);
+      updateData.image_url = newImageUrl;
+    }
+  }
+
+  const { data: updated, error } = await supabaseServiceClient
+    .from('products')
+    .update(updateData)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error || !updated) {
+    if ((error as { code?: string } | null)?.code === '23505') {
+      throw new Error('DUPLICATE_NAME'); // RN-01
+    }
+    console.error('Error actualizando producto:', error);
+    return null;
+  }
+
+  return updated as Product;
+};
+
+export const deleteProduct = async (id: string, userId: string): Promise<{ ok: boolean; reason?: string }> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return { ok: false, reason: 'seed_mode' };
+
+  // RN-05: Verificar que no haya pedidos activos
+  const { count } = await supabaseClient
+    .from('orders')
+    .select('id', { count: 'exact', head: true })
+    .eq('product_id', id)
+    .in('status', ['pendiente', 'en_proceso']);
+
+  if (count && count > 0) {
+    return { ok: false, reason: 'has_active_orders' }; // RN-05
+  }
+
+  // Eliminar imagen del blob
+  const product = await getProductById(id);
+  if (product?.image_url) {
+    await deleteProductImage(product.image_url);
+  }
+
+  // Eliminación lógica
+  const { error } = await supabaseServiceClient
+    .from('products')
+    .update({ is_active: false, updated_by: userId, updated_at: new Date().toISOString() })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error eliminando producto:', error);
+    return { ok: false, reason: 'db_error' };
+  }
+
+  return { ok: true };
+};
+
+export const adjustStock = async (
+  id: string,
+  userId: string,
+  data: AdjustStockRequest,
+): Promise<Product | null> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return null;
+
+  const product = await getProductById(id);
+  if (!product) return null;
+
+  const delta = data.type === 'entrada' ? data.quantity : -data.quantity;
+  const newStock = product.current_stock + delta;
+
+  if (newStock < 0) throw new Error('INSUFFICIENT_STOCK'); // RN-03
+
+  const { data: updated, error } = await supabaseServiceClient
+    .from('products')
+    .update({
+      current_stock: newStock,
+      updated_by: userId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error || !updated) {
+    console.error('Error ajustando stock:', error);
+    return null;
+  }
+
+  return updated as Product;
+};
+
+export const getLowStockProducts = async (): Promise<ProductWithStatus[]> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return [];
+
+  const { data, error } = await supabaseClient
+    .from('products')
+    .select('*')
+    .eq('is_active', true)
+    .filter('current_stock', 'lte', supabaseClient.from('products').select('min_stock'))
+    .order('current_stock', { ascending: true });
+
+  if (error || !data) {
+    // Fallback: obtener todos y filtrar
+    const all = await getInventory();
+    return all.filter((p) => p.current_stock <= p.min_stock);
+  }
+
+  return (data as Product[]).map(toProductWithStatus);
+};
+
+// ---------------------------------------------------------------------------
+// AUDITORIA
+// ---------------------------------------------------------------------------
+export const recordAudit = async (entry: AuditEntry): Promise<void> => {
   try {
     await recordAuditEntry(entry);
   } catch (error) {
-    console.error('Error recording audit:', error);
+    console.error('Error registrando auditoria:', error);
   }
 };
-
-// ============================================================================
-// HEALTH & DIAGNOSTICS
-// ============================================================================
-
-/**
- * Get system health information
- */
+export const readAuditMonth = async (yyyymm: string): Promise<AuditEntry[]> => {
+  const { getAuditLog } = await import('./blobAudit');
+  return getAuditLog(yyyymm) as Promise<AuditEntry[]>;
+};
+// ---------------------------------------------------------------------------
+// HEALTH
+// ---------------------------------------------------------------------------
 export const getSystemHealth = async () => {
   const mode = await getSystemMode();
+  const categories = await getCategories();
   const config = await getSystemConfig();
-
   return {
     mode,
     supabaseConfigured: isSupabaseConfigured(),
-    categories: (await getCategories()).length,
-    configKeys: Object.keys(config),
+    categories: categories.length,
+    defaultMinStock: config?.default_min_stock ?? 5,
   };
 };

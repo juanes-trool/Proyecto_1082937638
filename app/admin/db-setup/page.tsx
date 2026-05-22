@@ -146,12 +146,13 @@ export default function DbSetupPage() {
                 </CardHeader>
                 <CardBody>
                   <p className="text-amber-800 mb-4">
-                    La base de datos no ha sido inicializada. El bootstrap cargará:
+                    La base de datos no ha sido inicializada. El bootstrap:
                   </p>
                   <ul className="list-disc list-inside space-y-1 text-amber-800 mb-6">
-                    <li>Usuario administrador predeterminado</li>
-                    <li>6 categorías de productos (Maquillaje, Skincare, Cabello, Uñas, Fragancias, Accesorios)</li>
-                    <li>Configuración del sistema por defecto</li>
+                    <li><strong>Aplicará 3 migrations</strong> (usuarios, catálogo, pedidos)</li>
+                    <li>Cargará <strong>1 usuario admin</strong> predeterminado</li>
+                    <li>Cargará <strong>6 categorías predeterminadas</strong>: Maquillaje, Skincare, Cabello, Uñas, Fragancias, Accesorios</li>
+                    <li>Configurará el umbral de stock bajo por defecto (5 unidades)</li>
                   </ul>
 
                   <Button

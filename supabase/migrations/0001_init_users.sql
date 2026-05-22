@@ -3,35 +3,35 @@
 
 -- Create _migrations table to track applied migrations
 CREATE TABLE IF NOT EXISTS _migrations (
-  id BIGSERIAL PRIMARY KEY,
-  name VARCHAR(255) NOT NULL UNIQUE,
-  executed_at TIMESTAMPTZ DEFAULT NOW()
+  id         SERIAL       PRIMARY KEY,
+  filename   VARCHAR(255) UNIQUE NOT NULL,
+  applied_at TIMESTAMPTZ  DEFAULT NOW()
 );
 
 -- Create users table
 CREATE TABLE IF NOT EXISTS users (
-  id BIGSERIAL PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'employee')),
-  must_change_password BOOLEAN DEFAULT false,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id                   UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
+  name                 VARCHAR(120) NOT NULL,
+  email                VARCHAR(120) UNIQUE NOT NULL,
+  password_hash        VARCHAR(255) NOT NULL,
+  role                 VARCHAR(10)  NOT NULL DEFAULT 'empleado'
+                       CHECK (role IN ('admin', 'empleado')),
+  is_active            BOOLEAN      DEFAULT true,
+  must_change_password BOOLEAN      DEFAULT false,
+  last_login_at        TIMESTAMPTZ,
+  created_at           TIMESTAMPTZ  DEFAULT NOW()
 );
 
--- Create system_config table
+-- Create system_config table (single row — umbral global)
 CREATE TABLE IF NOT EXISTS system_config (
-  id BIGSERIAL PRIMARY KEY,
-  key VARCHAR(255) NOT NULL UNIQUE,
-  value TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  id                SERIAL    PRIMARY KEY,
+  default_min_stock INTEGER   NOT NULL DEFAULT 5,
+  updated_by        UUID      REFERENCES users(id) ON DELETE SET NULL,
+  updated_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create indexes for better query performance
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_system_config_key ON system_config(key);
+-- Create indexes
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 
 -- Mark this migration as executed
-INSERT INTO _migrations (name) VALUES ('0001_init_users') ON CONFLICT DO NOTHING;
+INSERT INTO _migrations (filename) VALUES ('0001_init_users.sql') ON CONFLICT DO NOTHING;

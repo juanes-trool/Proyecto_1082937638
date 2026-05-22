@@ -37,19 +37,19 @@ export const readMigration = (filename: string): string => {
  */
 export const getExecutedMigrations = async (pool: Pool): Promise<string[]> => {
   try {
-    // First, ensure _migrations table exists
+    // Asegurar que la tabla _migrations exista
     await pool.query(`
       CREATE TABLE IF NOT EXISTS _migrations (
-        id BIGSERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL UNIQUE,
-        executed_at TIMESTAMPTZ DEFAULT NOW()
+        id SERIAL PRIMARY KEY,
+        filename VARCHAR(255) UNIQUE NOT NULL,
+        applied_at TIMESTAMPTZ DEFAULT NOW()
       );
     `);
 
-    const result = await pool.query('SELECT name FROM _migrations ORDER BY executed_at ASC');
-    return result.rows.map((row) => row.name);
+    const result = await pool.query('SELECT filename FROM _migrations ORDER BY applied_at ASC');
+    return result.rows.map((row) => row.filename);
   } catch (error) {
-    console.error('Error getting executed migrations:', error);
+    console.error('Error obteniendo migraciones ejecutadas:', error);
     return [];
   }
 };
@@ -57,14 +57,14 @@ export const getExecutedMigrations = async (pool: Pool): Promise<string[]> => {
 /**
  * Record a migration as executed
  */
-export const recordMigration = async (pool: Pool, name: string): Promise<void> => {
+export const recordMigration = async (pool: Pool, filename: string): Promise<void> => {
   try {
     await pool.query(
-      'INSERT INTO _migrations (name) VALUES ($1) ON CONFLICT DO NOTHING',
-      [name]
+      'INSERT INTO _migrations (filename) VALUES ($1) ON CONFLICT DO NOTHING',
+      [filename]
     );
   } catch (error) {
-    console.error(`Error recording migration ${name}:`, error);
+    console.error(`Error registrando migración ${filename}:`, error);
   }
 };
 

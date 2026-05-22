@@ -11,7 +11,7 @@
 | **Estudiante** | Juan González |
 | **Documento de Identidad** | 1082937638 |
 | **Fecha de Inicio** | Mayo 2026 |
-| **Estado General** | INICIADO |
+| **Estado General** | EN PROGRESO — Fase 3 pendiente |
 | **Archivos de Referencia** | [doc/PLAN_SGIB.md](PLAN_SGIB.md) |
 | **Stack** | Next.js + TypeScript + Supabase Postgres + Vercel Blob + Vercel |
 
@@ -22,7 +22,7 @@
 | # | Fase | Rol Asignado | Estado | Inicio | Cierre | Resumen |
 |---|---|---|---|---|---|---|
 | 1 | Bootstrap, Login y `dataService` base | Ingeniero Fullstack Senior | ✅ Completada | 2026-05-04 | 2026-05-04 | [RESUMEN_FASE_1.md](RESUMEN_FASE_1.md) |
-| 2 | Layouts, Dashboard y bootstrap | Diseñador Frontend + Ingeniero Sistemas | ⏳ Pendiente | — | — | [RESUMEN_FASE_2.md](RESUMEN_FASE_2.md) |
+| 2 | Layouts, Dashboard y bootstrap | Diseñador Frontend + Ingeniero Sistemas | ✅ Completada | 2026-05-15 | 2026-05-15 | [RESUMEN_FASE_2.md](RESUMEN_FASE_2.md) |
 | 3 | Categorías, Productos e Imágenes | Ingeniero Fullstack Senior | ⏳ Pendiente | — | — | [RESUMEN_FASE_3.md](RESUMEN_FASE_3.md) |
 | 4 | Formulario de Pedido Público | Ingeniero Fullstack | ⏳ Pendiente | — | — | [RESUMEN_FASE_4.md](RESUMEN_FASE_4.md) |
 | 5 | Gestión de Pedidos y Reportes | Ingeniero Fullstack + Diseñador Frontend | ⏳ Pendiente | — | — | [RESUMEN_FASE_5.md](RESUMEN_FASE_5.md) |
@@ -52,6 +52,8 @@
 |---|---|---|---|---|
 | 2026-05-04 | 00:00 | Proyecto | Inicialización | Archivo de estado creado. Todas las fases en estado Pendiente. Sistema listo para comenzar Fase 1. |
 | 2026-05-04 | 14:35 | Fase 1 | Completada | Bootstrap, Login y dataService base completados. Todas las 12 tareas ejecutadas: dependencias npm instaladas, seed.json creado, migraciones SQL, módulos de librería, APIs de sistema y autenticación, páginas de UI, typecheck sin errores. Sistema listo para Fase 2. |
+| 2026-05-15 | — | Fase 2 | Completada | Layouts, Dashboard y bootstrap completados. Tareas ejecutadas: globals.css paleta SGIB (#FFF8FA, CSS vars); app/layout.tsx Inter font next/font; app/page.tsx redirige a /catalog; Sidebar.tsx role='empleado' + menú completo (Perfil, Usuarios, Auditoría); PublicLayout.tsx barra Tienda de Belleza + link Panel de Administración; AppLayout.tsx + SeedModeBanner; dashboard/page.tsx seed mode welcome + stats live; admin/db-setup/page.tsx menciona 3 migrations + 6 categorías. tsc --noEmit sin errores. |
+| 2026-05-15 | — | Fase 1 | Re-ejecución y correcciones | Correcciones profundas aplicadas: `supabase/migrations/0001_init_users.sql` reescrito (UUID, role='empleado', schema correcto); `lib/types.ts` reescrito (UserRole, SafeUser, AuthPayload, UUID strings); `lib/dataService.ts` reescrito completo (seed mode + live mode, SEED_ADMIN_ID UUID); `lib/pgMigrate.ts` corregido (columna `filename`, SERIAL); `lib/blobAudit.ts` implementado con get()+head() real del SDK; `middleware.ts` reescrito (/api/public/* público, config.matcher, respuestas 401/403 en APIs); `app/login/page.tsx` rediseñada (identidad SGIB: from-rose-50, borde top #F43F5E, SVG flask, título #9F1239); `next.config.ts` + headers no-store para APIs; `app/api/system/bootstrap/route.ts` corregido (system_config con default_min_stock). `tsc --noEmit` pasa sin errores. |
 
 ---
 

@@ -1,72 +1,94 @@
 // middleware.ts
-// Route protection middleware
+// Protección de rutas — separación público/privado del SGIB
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyJWT } from './lib/auth';
 
-// Routes that are publicly accessible (no auth required)
-const PUBLIC_ROUTES = ['/', '/login', '/catalog', '/order'];
-
-// Routes that require admin role
-const ADMIN_ROUTES = ['/admin', '/reports', '/categories', '/config'];
-
-// Routes that require authentication but not necessarily admin
-const PROTECTED_ROUTES = ['/dashboard', '/inventory', '/orders', '/profile'];
+/**
+ * Rutas públicas: accesibles SIN autenticación.
+ * El catálogo, el formulario de pedido y las API públicas son la cara
+ * pública del sistema — un cliente las abre desde Instagram sin cuenta.
+ */
+const PUBLIC_PREFIXES = [
+  '/catalog',       // /catalog y /catalog/*
+  '/order',         // /order/* (formulario de pedido)
+  '/api/public',    // /api/public/* (catálogo + pedido públicos)
+  '/login',
+  '/_next',
+  '/favicon.ico',
+  '/public',
+];
 
 /**
- * Check if a route matches a pattern
+ * Rutas exclusivas del admin
  */
-const matchesRoute = (pathname: string, patterns: string[]): boolean => {
-  return patterns.some((pattern) => {
-    if (pattern.endsWith('/*')) {
-      const prefix = pattern.slice(0, -2);
-      return pathname.startsWith(prefix);
-    }
-    return pathname === pattern;
-  });
-};
+const ADMIN_PREFIXES = [
+  '/admin',
+  '/reports',
+  '/categories',
+  '/config',
+  '/api/reports',
+  '/api/categories',
+  '/api/users',
+  '/api/audit',
+];
+
+const isPublic = (pathname: string): boolean =>
+  pathname === '/' ||
+  PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
+
+const isAdminOnly = (pathname: string): boolean =>
+  ADMIN_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes
-  if (matchesRoute(pathname, PUBLIC_ROUTES)) {
+  // Permitir rutas públicas sin verificar token
+  if (isPublic(pathname)) {
     return NextResponse.next();
   }
 
-  // Check for auth token
+  // Verificar token en cookie HttpOnly
   const token = request.cookies.get('auth_token')?.value;
 
   if (!token) {
-    // Redirect to login if not authenticated
+    // Para API routes: 401; para páginas: redirect a /login
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ success: false, error: 'No autenticado' }, { status: 401 });
+    }
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Verify JWT
   const payload = await verifyJWT(token);
 
   if (!payload) {
-    // Clear invalid token and redirect to login
-    const response = NextResponse.redirect(new URL('/login', request.url));
+    const response = pathname.startsWith('/api/')
+      ? NextResponse.json({ success: false, error: 'Token inválido' }, { status: 401 })
+      : NextResponse.redirect(new URL('/login', request.url));
     response.cookies.delete('auth_token');
     return response;
   }
 
-  // Check for admin-only routes
-  if (matchesRoute(pathname, ADMIN_ROUTES)) {
-    if (payload.role !== 'admin') {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Verificar rol para rutas exclusivas del admin
+  if (isAdminOnly(pathname) && payload.role !== 'admin') {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ success: false, error: 'Acceso denegado' }, { status: 403 });
     }
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  // Check for protected routes (any authenticated user)
-  if (matchesRoute(pathname, PROTECTED_ROUTES)) {
-    // Already authenticated, allow
-  }
-
-  // Allow everything else if authenticated
   return NextResponse.next();
 }
+
+export const config = {
+  matcher: [
+    /*
+     * Ejecutar en todas las rutas excepto archivos estáticos de Next.js
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+};
+
 
 export const config = {
   matcher: [

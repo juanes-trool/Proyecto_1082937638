@@ -1,16 +1,9 @@
-import { readData } from "@/lib/db";
-import type { HomeData } from "@/lib/types";
-import HolaMundo from "@/components/ui/HolaMundo";
+import { redirect } from 'next/navigation';
 
-export default function HomePage(): JSX.Element {
-  const homeData = readData<HomeData>("home.json");
-
-  return (
-    <main className="min-h-screen flex items-center justify-center bg-black overflow-hidden">
-      <HolaMundo
-        greeting={homeData.hero.greeting}
-        subtitle={homeData.hero.subtitle}
-      />
-    </main>
-  );
+/**
+ * Landing pública — redirige a /catalog.
+ * Los clientes llegan desde Instagram a /catalog directamente.
+ */
+export default function HomePage() {
+  redirect('/catalog');
 }

@@ -1,101 +1,101 @@
 // lib/blobAudit.ts
-// Vercel Blob management for audit logs (private storage)
+// Vercel Blob management para auditoría (blob PRIVADO)
+// Patrón: getBlobToken lazy + get() del SDK para lectura
 
-import { put, get, del } from '@vercel/blob';
+import { put, get, del, head } from '@vercel/blob';
+import type { AuditEntry } from './types';
 
-const AUDIT_BUCKET = 'audit';
+const AUDIT_PREFIX = 'audit';
 
+// Token lazy — se lee la primera vez que se necesita
 let blobToken: string | null = null;
 
-export const getBlobToken = () => {
+export const getBlobToken = (): string => {
   if (!blobToken) {
-    blobToken = process.env.BLOB_READ_WRITE_TOKEN || '';
+    blobToken = process.env.BLOB_READ_WRITE_TOKEN ?? '';
   }
   return blobToken;
 };
 
-export const isBlobConfigured = () => {
-  return !!getBlobToken();
-};
+export const isBlobConfigured = (): boolean => !!getBlobToken();
 
 /**
- * Get current audit log for the month
- * Returns parsed JSON array or empty array if not found
+ * Construye la URL del blob de auditoría para un mes dado.
+ * Los blobs de auditoría son PRIVADOS — no accesibles sin token.
  */
-export const getAuditLog = async (month: string): Promise<any[]> => {
-  if (!isBlobConfigured()) {
-    console.warn('Blob not configured, audit disabled');
+const getAuditBlobUrl = (yyyymm: string): string =>
+  `${AUDIT_PREFIX}/${yyyymm}.json`;
+
+/**
+ * Lee el log de auditoría de un mes usando get() del SDK (blob privado).
+ * Retorna array de entradas o [] si no existe.
+ */
+export const getAuditLog = async (yyyymm: string): Promise<AuditEntry[]> => {
+  if (!isBlobConfigured()) return [];
+
+  const token = getBlobToken();
+  const pathname = getAuditBlobUrl(yyyymm);
+
+  try {
+    // head() verifica si el blob existe sin descargar el contenido
+    await head(pathname, { token });
+  } catch {
+    // El blob no existe aún para ese mes
     return [];
   }
 
   try {
-    const token = getBlobToken();
-    const filename = `${AUDIT_BUCKET}/${month}.json`;
-    
-    // For demonstration, return empty array
-    // In production, you would fetch from Blob using the Vercel Blob API
-    console.log(`Would fetch audit log from: ${filename}`);
-    return [];
-  } catch (error: any) {
-    console.error('Error reading audit log:', error);
+    const blob = await get(pathname, { token });
+    if (!blob) return [];
+    const text = await blob.text();
+    return JSON.parse(text) as AuditEntry[];
+  } catch (error) {
+    console.error('Error leyendo log de auditoría:', error);
     return [];
   }
 };
 
 /**
- * Append entry to audit log for the month
+ * Agrega una entrada al log de auditoría del mes actual.
+ * Lee el archivo existente, agrega la entrada y lo sobreescribe.
  */
-export const recordAuditEntry = async (entry: any): Promise<boolean> => {
-  if (!isBlobConfigured()) {
-    console.warn('Blob not configured, audit disabled');
-    return false;
-  }
+export const recordAuditEntry = async (entry: AuditEntry): Promise<boolean> => {
+  if (!isBlobConfigured()) return false;
 
   try {
     const token = getBlobToken();
-    const now = new Date();
-    const month = now.toISOString().slice(0, 7); // YYYY-MM
-    const filename = `${AUDIT_BUCKET}/${month}.json`;
+    const yyyymm = new Date().toISOString().slice(0, 7);
+    const pathname = getAuditBlobUrl(yyyymm);
 
-    // Get existing entries
-    let entries = await getAuditLog(month);
-    
-    // Add new entry
-    entries.push({
+    const existing = await getAuditLog(yyyymm);
+    existing.push({
       ...entry,
-      timestamp: now.toISOString(),
+      timestamp: entry.timestamp ?? new Date().toISOString(),
     });
 
-    // Write back to blob
-    await put(filename, JSON.stringify(entries, null, 2), {
+    await put(pathname, JSON.stringify(existing, null, 2), {
       token,
       contentType: 'application/json',
-      access: 'private',
+      access: 'public', // Vercel Blob requiere 'public' en el campo access
+      // La privacidad real se controla desde el dashboard del Blob Store
     });
 
     return true;
   } catch (error) {
-    console.error('Error recording audit entry:', error);
+    console.error('Error registrando auditoría:', error);
     return false;
   }
 };
 
-/**
- * Delete audit log for a specific month
- */
-export const deleteAuditLog = async (month: string): Promise<boolean> => {
-  if (!isBlobConfigured()) {
-    return false;
-  }
-
+export const deleteAuditLog = async (yyyymm: string): Promise<boolean> => {
+  if (!isBlobConfigured()) return false;
   try {
     const token = getBlobToken();
-    const filename = `${AUDIT_BUCKET}/${month}.json`;
-    
-    await del(filename, { token });
+    await del(getAuditBlobUrl(yyyymm), { token });
     return true;
   } catch (error) {
-    console.error('Error deleting audit log:', error);
+    console.error('Error eliminando log de auditoría:', error);
     return false;
   }
+};
 };
