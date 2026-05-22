@@ -144,6 +144,7 @@ export interface PublicProduct {
   price: number;
   image_url: string | null;
   is_available: boolean; // calculado
+  current_stock: number;
 }
 
 export interface CreateProductRequest {

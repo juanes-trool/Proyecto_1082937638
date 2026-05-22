@@ -25,7 +25,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const parsed = createCategorySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' },
+        { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' },
         { status: 400 }
       );
     }

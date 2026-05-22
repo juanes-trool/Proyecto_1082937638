@@ -59,45 +59,52 @@ body {
 
 /* Utility classes */
 .gradient-primary {
-  @apply bg-gradient-to-r from-pink-500 to-fuchsia-600;
+  background-image: linear-gradient(to right, #ec4899, #c026d3);
 }
 
-.gradient-primary-hover {
-  @apply hover:from-pink-600 hover:to-fuchsia-700;
+.gradient-primary-hover:hover {
+  background-image: linear-gradient(to right, #db2777, #a21caf);
 }
 
 .text-gradient-primary {
-  @apply bg-gradient-to-r from-pink-500 to-fuchsia-600 bg-clip-text text-transparent;
+  background-image: linear-gradient(to right, #ec4899, #c026d3);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Button reset */
 button {
-  @apply font-medium transition-all duration-200;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 /* Input focus styles */
 input:focus,
 textarea:focus,
 select:focus {
-  @apply outline-none ring-2 ring-offset-2 ring-pink-500;
+  outline: none;
+  box-shadow: 0 0 0 2px #ec4899;
 }
 
 /* Animation */
 @keyframes fadeIn {
   from {
-    @apply opacity-0;
+    opacity: 0;
   }
   to {
-    @apply opacity-100;
+    opacity: 1;
   }
 }
 
 @keyframes slideIn {
   from {
-    @apply translate-y-4 opacity-0;
+    transform: translateY(1rem);
+    opacity: 0;
   }
   to {
-    @apply translate-y-0 opacity-100;
+    transform: translateY(0);
+    opacity: 1;
   }
 }
 

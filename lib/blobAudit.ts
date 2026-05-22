@@ -26,6 +26,28 @@ export const isBlobConfigured = (): boolean => !!getBlobToken();
 const getAuditBlobUrl = (yyyymm: string): string =>
   `${AUDIT_PREFIX}/${yyyymm}.json`;
 
+const readBlobStreamAsText = async (stream: ReadableStream<Uint8Array>): Promise<string> => {
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (value) chunks.push(value);
+  }
+
+  const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+  const merged = new Uint8Array(totalLength);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.length;
+  }
+
+  return new TextDecoder().decode(merged);
+};
+
 /**
  * Lee el log de auditoría de un mes usando get() del SDK (blob privado).
  * Retorna array de entradas o [] si no existe.
@@ -45,9 +67,9 @@ export const getAuditLog = async (yyyymm: string): Promise<AuditEntry[]> => {
   }
 
   try {
-    const blob = await get(pathname, { token });
-    if (!blob) return [];
-    const text = await blob.text();
+    const result = await get(pathname, { token, access: 'public' });
+    if (!result || !('stream' in result) || !result.stream) return [];
+    const text = await readBlobStreamAsText(result.stream);
     return JSON.parse(text) as AuditEntry[];
   } catch (error) {
     console.error('Error leyendo log de auditoría:', error);
@@ -97,5 +119,4 @@ export const deleteAuditLog = async (yyyymm: string): Promise<boolean> => {
     console.error('Error eliminando log de auditoría:', error);
     return false;
   }
-};
 };

@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         databaseInitialized: dbInit,
         blobConfigured: isBlobConfigured(),
         categoriesCount: health.categories,
-        configKeys: health.configKeys,
+        defaultMinStock: health.defaultMinStock,
       },
     });
   } catch (error) {

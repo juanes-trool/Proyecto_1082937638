@@ -252,7 +252,7 @@ export const getPublicCatalog = async (categoryId?: string): Promise<PublicProdu
   return (data as Array<{
     id: string; name: string; brand: string | null; description: string | null;
     price: number; current_stock: number; image_url: string | null;
-    category_id: string; categories: { name: string } | null;
+    category_id: string; categories: Array<{ name: string }> | null;
   }>).map((p) => ({
     id: p.id,
     name: p.name,
@@ -261,7 +261,7 @@ export const getPublicCatalog = async (categoryId?: string): Promise<PublicProdu
     price: p.price,
     image_url: p.image_url,
     category_id: p.category_id,
-    category_name: p.categories?.name ?? '',
+    category_name: Array.isArray(p.categories) ? (p.categories[0]?.name ?? '') : '',
     is_available: p.current_stock > 0,
     current_stock: p.current_stock,
   }));
@@ -287,7 +287,7 @@ export const getPublicProductById = async (id: string): Promise<PublicProduct | 
   const p = data as {
     id: string; name: string; brand: string | null; description: string | null;
     price: number; current_stock: number; image_url: string | null;
-    category_id: string; categories: { name: string } | null;
+    category_id: string; categories: Array<{ name: string }> | null;
   };
 
   return {
@@ -298,7 +298,7 @@ export const getPublicProductById = async (id: string): Promise<PublicProduct | 
     price: p.price,
     image_url: p.image_url,
     category_id: p.category_id,
-    category_name: p.categories?.name ?? '',
+    category_name: Array.isArray(p.categories) ? (p.categories[0]?.name ?? '') : '',
     is_available: p.current_stock > 0,
     current_stock: p.current_stock,
   };

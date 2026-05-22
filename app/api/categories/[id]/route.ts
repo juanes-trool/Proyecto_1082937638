@@ -38,7 +38,7 @@ export async function PUT(
     const parsed = updateCategorySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { success: false, error: parsed.error.errors[0]?.message ?? 'Datos inválidos' },
+        { success: false, error: parsed.error.issues[0]?.message ?? 'Datos inválidos' },
         { status: 400 }
       );
     }

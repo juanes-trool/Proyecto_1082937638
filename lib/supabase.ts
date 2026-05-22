@@ -7,8 +7,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-export const supabaseServiceClient = createClient(supabaseUrl, supabaseServiceRoleKey);
+const safeSupabaseUrl = supabaseUrl || 'https://placeholder.supabase.co';
+const safeAnonKey = supabaseAnonKey || 'placeholder-anon-key';
+const safeServiceRoleKey = supabaseServiceRoleKey || 'placeholder-service-role-key';
+
+export const supabaseClient = createClient(safeSupabaseUrl, safeAnonKey);
+export const supabaseServiceClient = createClient(safeSupabaseUrl, safeServiceRoleKey);
 
 // Get the connection string for migrations
 export const getDatabaseUrl = () => {
