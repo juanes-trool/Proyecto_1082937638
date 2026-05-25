@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* ===== PALETA SGIB — Sistema de Gestión de Inventario de Belleza ===== */
 :root {
