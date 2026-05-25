@@ -542,6 +542,163 @@ export const readAuditMonth = async (yyyymm: string): Promise<AuditEntry[]> => {
   return getAuditLog(yyyymm) as Promise<AuditEntry[]>;
 };
 // ---------------------------------------------------------------------------
+// ORDENES
+// ---------------------------------------------------------------------------
+
+import type { Order, OrderFilters, OrderReportRow, InventoryReportRow } from './types';
+
+export const getOrders = async (filters?: OrderFilters): Promise<Order[]> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return [];
+
+  let query = supabaseClient.from('orders').select('*').eq('is_active', true);
+
+  if (filters?.status) {
+    query = query.eq('status', filters.status);
+  }
+
+  if (filters?.product_id) {
+    query = query.eq('product_id', filters.product_id);
+  }
+
+  if (filters?.from) {
+    query = query.gte('created_at', `${filters.from}T00:00:00Z`);
+  }
+
+  if (filters?.to) {
+    query = query.lte('created_at', `${filters.to}T23:59:59Z`);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('Error obteniendo órdenes:', error);
+    return [];
+  }
+
+  return data as Order[];
+};
+
+export const updateOrderStatus = async (
+  orderId: string,
+  newStatus: string,
+  userId: string
+): Promise<Order | null> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return null;
+
+  // Validar que el nuevo status sea válido
+  const validStatuses = ['pendiente', 'en_proceso', 'entregado', 'cancelado'];
+  if (!validStatuses.includes(newStatus)) {
+    throw new Error('INVALID_STATUS');
+  }
+
+  const { data, error } = await supabaseServiceClient
+    .from('orders')
+    .update({
+      status: newStatus,
+      updated_by: userId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', orderId)
+    .select()
+    .single();
+
+  if (error || !data) {
+    console.error('Error actualizando estado de orden:', error);
+    return null;
+  }
+
+  return data as Order;
+};
+
+// ---------------------------------------------------------------------------
+// REPORTES
+// ---------------------------------------------------------------------------
+
+export const getOrdersByPeriodData = async (
+  from: string,
+  to: string
+): Promise<OrderReportRow[]> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return [];
+
+  const { data, error } = await supabaseClient
+    .from('orders')
+    .select('created_at, product_name_snapshot, customer_name, quantity, unit_price_snapshot, total')
+    .gte('created_at', `${from}T00:00:00Z`)
+    .lte('created_at', `${to}T23:59:59Z`)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('Error obteniendo datos de período:', error);
+    return [];
+  }
+
+  return data.map((row) => ({
+    created_at: row.created_at,
+    product_name_snapshot: row.product_name_snapshot,
+    customer_name: row.customer_name,
+    quantity: row.quantity,
+    unit_price_snapshot: row.unit_price_snapshot,
+    total: row.total,
+  })) as OrderReportRow[];
+};
+
+export const getInventoryReportData = async (): Promise<InventoryReportRow[]> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return [];
+
+  const products = await getInventory();
+  const categories = await getCategories();
+  const categoryMap = Object.fromEntries(
+    categories.map((c) => [c.id, c.name])
+  );
+
+  return products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    brand: p.brand,
+    category_name: categoryMap[p.category_id] || 'Sin categoría',
+    current_stock: p.current_stock,
+    min_stock: p.min_stock,
+    price: p.price,
+    is_available: p.is_available,
+  })) as InventoryReportRow[];
+};
+
+export const getTopProductsData = async (
+  from: string,
+  to: string
+): Promise<OrderReportRow[]> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return [];
+
+  const { data, error } = await supabaseClient
+    .from('orders')
+    .select('product_name_snapshot, quantity, customer_name, unit_price_snapshot, total, created_at')
+    .gte('created_at', `${from}T00:00:00Z`)
+    .lte('created_at', `${to}T23:59:59Z`)
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.error('Error obteniendo datos de top productos:', error);
+    return [];
+  }
+
+  return data.map((row) => ({
+    created_at: row.created_at,
+    product_name_snapshot: row.product_name_snapshot,
+    customer_name: row.customer_name,
+    quantity: row.quantity,
+    unit_price_snapshot: row.unit_price_snapshot,
+    total: row.total,
+  })) as OrderReportRow[];
+};
+
+// ---------------------------------------------------------------------------
 // HEALTH
 // ---------------------------------------------------------------------------
 export const getSystemHealth = async () => {

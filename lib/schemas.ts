@@ -61,6 +61,15 @@ export const placeOrderSchema = z.object({
   notes: z.string().max(500).trim().optional(),
 });
 
+// ============================================================================
+// ACTUALIZACION DE ESTADOS DE PEDIDOS (Fase 5)
+// ============================================================================
+
+export const updateOrderStatusSchema = z.object({
+  status: z.enum(['pendiente', 'en_proceso', 'entregado', 'cancelado']),
+  confirmCancelation: z.boolean().optional(),
+});
+
 // Tipos inferidos
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
@@ -68,3 +77,4 @@ export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type AdjustStockInput = z.infer<typeof adjustStockSchema>;
 export type PlaceOrderInput = z.infer<typeof placeOrderSchema>;
+export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
