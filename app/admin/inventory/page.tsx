@@ -51,16 +51,16 @@ export default function InventoryPage() {
     e.preventDefault();
     try {
       setError('');
+      const fd = new FormData();
+      fd.append('name', formData.name.trim());
+      fd.append('description', formData.description.trim());
+      fd.append('category_id', formData.categoryId);
+      fd.append('price', formData.price.toString());
+      fd.append('current_stock', formData.currentStock.toString());
+
       const res = await fetch('/api/products', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          description: formData.description.trim(),
-          category_id: formData.categoryId,
-          price: formData.price,
-          current_stock: formData.currentStock,
-        }),
+        body: fd,
       });
 
       if (!res.ok) {
