@@ -20,11 +20,11 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',    href: '/dashboard',       icon: '📊', roles: ['admin', 'empleado'] },
-  { label: 'Inventario',   href: '/inventory',       icon: '📦', roles: ['admin', 'empleado'] },
-  { label: 'Pedidos',      href: '/orders',          icon: '🛒', roles: ['admin', 'empleado'] },
-  { label: 'Perfil',       href: '/profile',         icon: '👤', roles: ['admin', 'empleado'] },
-  { label: 'Categorías',   href: '/categories',      icon: '🏷️', roles: ['admin'] },
-  { label: 'Reportes',     href: '/reports',         icon: '📈', roles: ['admin'] },
+  { label: 'Inventario',   href: '/admin/inventory', icon: '📦', roles: ['admin', 'empleado'] },
+  { label: 'Pedidos',      href: '/admin/orders',    icon: '🛒', roles: ['admin', 'empleado'] },
+  { label: 'Perfil',       href: '/dashboard',       icon: '👤', roles: ['admin', 'empleado'] },
+  { label: 'Categorías',   href: '/dashboard',       icon: '🏷️', roles: ['admin'] },
+  { label: 'Reportes',     href: '/admin/reports',   icon: '📈', roles: ['admin'] },
   { label: 'Configuración', href: '/config',         icon: '⚙️', roles: ['admin'] },
   { label: 'Usuarios',     href: '/admin/users',     icon: '👥', roles: ['admin'] },
   { label: 'Auditoría',    href: '/admin/audit',     icon: '🔍', roles: ['admin'] },
