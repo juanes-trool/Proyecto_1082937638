@@ -11,7 +11,7 @@
 | **Estudiante** | Juan González |
 | **Documento de Identidad** | 1082937638 |
 | **Fecha de Inicio** | Mayo 2026 |
-| **Estado General** | EN PROGRESO — Fase 3 pendiente |
+| **Estado General** | EN PROGRESO — Fase 5 completada, Fase 6 pendiente |
 | **Archivos de Referencia** | [doc/PLAN_SGIB.md](PLAN_SGIB.md) |
 | **Stack** | Next.js + TypeScript + Supabase Postgres + Vercel Blob + Vercel |
 
@@ -25,7 +25,7 @@
 | 2 | Layouts, Dashboard y bootstrap | Diseñador Frontend + Ingeniero Sistemas | ✅ Completada | 2026-05-15 | 2026-05-15 | [RESUMEN_FASE_2.md](RESUMEN_FASE_2.md) |
 | 3 | Categorías, Productos e Imágenes | Ingeniero Fullstack Senior | ✅ Completada | 2026-05-25 | 2026-05-25 | [RESUMEN_FASE_3.md](RESUMEN_FASE_3.md) |
 | 4 | Formulario de Pedido Público | Ingeniero Fullstack | ✅ Completada | 2026-05-25 | 2026-05-25 | [RESUMEN_FASE_4.md](RESUMEN_FASE_4.md) |
-| 5 | Gestión de Pedidos y Reportes | Ingeniero Fullstack + Diseñador Frontend | ⏳ Pendiente | — | — | [RESUMEN_FASE_5.md](RESUMEN_FASE_5.md) |
+| 5 | Gestión de Pedidos y Reportes | Ingeniero Fullstack + Diseñador Frontend | ✅ Completada | 2026-05-25 | 2026-05-25 | [RESUMEN_FASE_5.md](RESUMEN_FASE_5.md) |
 | 6 | Administración y Pulido Final | Diseñador Frontend + Ingeniero Fullstack | ⏳ Pendiente | — | — | [RESUMEN_FASE_6.md](RESUMEN_FASE_6.md) |
 
 ---
@@ -56,6 +56,7 @@
 | 2026-05-15 | — | Fase 1 | Re-ejecución y correcciones | Correcciones profundas aplicadas: `supabase/migrations/0001_init_users.sql` reescrito (UUID, role='empleado', schema correcto); `lib/types.ts` reescrito (UserRole, SafeUser, AuthPayload, UUID strings); `lib/dataService.ts` reescrito completo (seed mode + live mode, SEED_ADMIN_ID UUID); `lib/pgMigrate.ts` corregido (columna `filename`, SERIAL); `lib/blobAudit.ts` implementado con get()+head() real del SDK; `middleware.ts` reescrito (/api/public/* público, config.matcher, respuestas 401/403 en APIs); `app/login/page.tsx` rediseñada (identidad SGIB: from-rose-50, borde top #F43F5E, SVG flask, título #9F1239); `next.config.ts` + headers no-store para APIs; `app/api/system/bootstrap/route.ts` corregido (system_config con default_min_stock). `tsc --noEmit` pasa sin errores. |
 | 2026-05-25 | 11:55 | Fase 3 | Completada | Categorías, Productos e Imágenes completados. Implementación verificada: migration 0002_init_catalog.sql con tablas categories + products (RN-01 a RN-06); lib/blobImages.ts con upload/delete público; endpoints API GET/POST /api/categories y /api/categories/[id]; endpoints API GET/POST /api/products y /api/products/[id]; endpoints públicos /api/public/catalog y /api/public/catalog/[id]; componentes ProductCard.tsx y CategoryFilter.tsx; app/catalog/page.tsx con filtros por categoría; validaciones Zod en schemas.ts; tipos CompleteProduct, PublicProduct en types.ts. Estado EN STOCK calculado (no almacenado, RN-04). Imagen de producto en Blob público con URL accesible directa. npm run type-check sin errores. Sistema listo para Fase 4. |
 | 2026-05-25 | 12:05 | Fase 4 | Completada | Formulario de Pedido Público completado. Implementación verificada: migration 0003_init_orders.sql con tabla orders (RN-09 a RN-13); lib/orderService.ts con placeOrder atómico (RN-07 a RN-13, snapshots de nombre y precio); endpoint POST /api/public/order sin autenticación; OrderForm.tsx con validación de cantidad (RN-11) y feedback visual en rojo; OrderConfirmation.tsx con número de pedido, detalles y info de entrega; pages /order/[productId] con imagen y formulario; page /order/confirm con confirmación del pedido; schemas.ts con placeOrderSchema (RN-09, RN-10); auditoría de place_order (user_role='public'). Validaciones RN-07 a RN-13 en servidor. npm run type-check sin errores. Sistema listo para Fase 5. |
+| 2026-05-25 | 13:10 | Fase 5 | Completada | Gestión de Pedidos y Reportes completada. Implementación verificada: lib/reportService.ts con funciones CSV (buildInventoryReport, buildTopProductsReport, generateInventoryCSV, generateTopProductsCSV, generateOrderPeriodCSV); lib/dataService.ts extendido (getOrders, updateOrderStatus, getOrdersByPeriodData, getInventoryReportData, getTopProductsData); endpoints GET/PATCH /api/orders, GET /api/reports, GET /api/reports/inventory, GET /api/reports/top-products, GET /api/reports/by-period, GET /api/reports/export (CSV); componentes OrdersTable.tsx, StatusTransitionModal.tsx, ReportFilters.tsx; páginas app/admin/orders/page.tsx y app/admin/reports/page.tsx; RN-14 implementado con advertencia modal en cancelación desde en_proceso; csv generado con BOM UTF-8 para Excel; npm run type-check sin errores; git commit [94ea7b3] + push exitoso. Sistema listo para Fase 6. |
 
 ---
 
