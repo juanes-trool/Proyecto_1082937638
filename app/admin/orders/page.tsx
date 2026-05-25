@@ -169,7 +169,7 @@ export default function OrdersPage() {
         <div className="mt-8 p-4 bg-blue-50 border-l-4 border-blue-400 rounded">
           <p className="text-sm font-semibold text-blue-900">💡 Consejo</p>
           <p className="text-sm text-blue-800 mt-1">
-            Haz clic en el estado de un pedido para cambiar su estado. Si cancelas un pedido que está "En proceso", el stock no se restaurará automáticamente.
+            Haz clic en el estado de un pedido para cambiar su estado. Si cancelas un pedido que está &quot;En proceso&quot;, el stock no se restaurará automáticamente.
           </p>
         </div>
       </div>
