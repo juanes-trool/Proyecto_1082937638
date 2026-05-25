@@ -70,6 +70,23 @@ export const updateOrderStatusSchema = z.object({
   confirmCancelation: z.boolean().optional(),
 });
 
+// ============================================================================
+// USUARIOS (Fase 6)
+// ============================================================================
+
+export const createUserSchema = z.object({
+  name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(150).trim(),
+  email: z.string().email('El email debe ser válido'),
+  role: z.enum(['admin', 'empleado']),
+});
+
+export const updateUserSchema = z.object({
+  name: z.string().min(2).max(150).trim().optional(),
+  email: z.string().email('El email debe ser válido').optional(),
+  role: z.enum(['admin', 'empleado']).optional(),
+  is_active: z.boolean().optional(),
+});
+
 // Tipos inferidos
 export type CreateCategoryInput = z.infer<typeof createCategorySchema>;
 export type UpdateCategoryInput = z.infer<typeof updateCategorySchema>;
@@ -78,3 +95,5 @@ export type UpdateProductInput = z.infer<typeof updateProductSchema>;
 export type AdjustStockInput = z.infer<typeof adjustStockSchema>;
 export type PlaceOrderInput = z.infer<typeof placeOrderSchema>;
 export type UpdateOrderStatusInput = z.infer<typeof updateOrderStatusSchema>;
+export type CreateUserInput = z.infer<typeof createUserSchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;

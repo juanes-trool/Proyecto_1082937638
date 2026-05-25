@@ -125,6 +125,40 @@ export const listUsers = async (): Promise<SafeUser[]> => {
   if (error || !data) return [];
   return data as SafeUser[];
 };
+export const updateUser = async (
+  userId: string,
+  updates: { name?: string; email?: string; role?: 'admin' | 'empleado'; is_active?: boolean }
+): Promise<User | null> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return null;
+  const { data, error } = await supabaseServiceClient
+    .from('users')
+    .update(updates)
+    .eq('id', userId)
+    .select()
+    .single();
+  if (error || !data) { console.error('Error actualizando usuario:', error); return null; }
+  return data as User;
+};
+export const deleteUser = async (userId: string): Promise<boolean> => {
+  const mode = await getSystemMode();
+  if (mode === 'seed') return false;
+  if (userId === SEED_ADMIN_ID) return false; // no eliminar admin seed
+  const { error } = await supabaseServiceClient
+    .from('users')
+    .update({ is_active: false })
+    .eq('id', userId);
+  return !error;
+};
+export const generateTemporaryPassword = (): string => {
+  // Generar contraseña temporal: 12 caracteres con mayúsculas, minúsculas y números
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789abcdefghijklmnopqrstuvwxyz';
+  let password = '';
+  for (let i = 0; i < 12; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return password;
+};
 // ---------------------------------------------------------------------------
 // CONFIGURACION DEL SISTEMA
 // ---------------------------------------------------------------------------
