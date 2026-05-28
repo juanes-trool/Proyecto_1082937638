@@ -4,6 +4,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { Card, CardBody, CardHeader, Button, Badge } from '@/components/ui';
 
@@ -11,9 +12,8 @@ interface Diagnostics {
   systemMode: 'seed' | 'live';
   supabaseConfigured: boolean;
   databaseInitialized: boolean;
-  blobConfigured: boolean;
+  auditConfigured: boolean;
   categoriesCount: number;
-  configKeys: string[];
 }
 
 export default function DbSetupPage() {
@@ -73,7 +73,8 @@ export default function DbSetupPage() {
   return (
     <AppLayout>
       <div className="max-w-4xl">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">⚙️ Configuración de Base de Datos</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-600">Panel interno</p>
+        <h1 className="font-display text-3xl text-brand-900 mb-6">Base de datos</h1>
 
         {message && (
           <div
@@ -96,7 +97,7 @@ export default function DbSetupPage() {
             {/* Diagnostics */}
             <Card className="mb-6">
               <CardHeader>
-                <h2 className="text-xl font-bold">📊 Estado del Sistema</h2>
+                <h2 className="text-xl font-bold">Estado del sistema</h2>
               </CardHeader>
               <CardBody>
                 <div className="grid grid-cols-2 gap-6">
@@ -105,28 +106,28 @@ export default function DbSetupPage() {
                     <Badge
                       variant={diagnostics.systemMode === 'live' ? 'success' : 'warning'}
                     >
-                      {diagnostics.systemMode === 'live' ? '🟢 Live' : '🟡 Semilla'}
+                      {diagnostics.systemMode === 'live' ? 'Live' : 'Semilla'}
                     </Badge>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">Supabase Configurado</p>
+                    <p className="text-sm text-gray-600 mb-2">Supabase configurado</p>
                     <Badge variant={diagnostics.supabaseConfigured ? 'success' : 'danger'}>
-                      {diagnostics.supabaseConfigured ? '✓ Sí' : '✗ No'}
+                      {diagnostics.supabaseConfigured ? 'Sí' : 'No'}
                     </Badge>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">Base de Datos Inicializada</p>
+                    <p className="text-sm text-gray-600 mb-2">Base de datos inicializada</p>
                     <Badge variant={diagnostics.databaseInitialized ? 'success' : 'danger'}>
-                      {diagnostics.databaseInitialized ? '✓ Sí' : '✗ No'}
+                      {diagnostics.databaseInitialized ? 'Sí' : 'No'}
                     </Badge>
                   </div>
 
                   <div>
-                    <p className="text-sm text-gray-600 mb-2">Blob Configurado</p>
-                    <Badge variant={diagnostics.blobConfigured ? 'success' : 'danger'}>
-                      {diagnostics.blobConfigured ? '✓ Sí' : '✗ No'}
+                    <p className="text-sm text-gray-600 mb-2">Auditoría en Supabase</p>
+                    <Badge variant={diagnostics.auditConfigured ? 'success' : 'danger'}>
+                      {diagnostics.auditConfigured ? 'Sí' : 'No'}
                     </Badge>
                   </div>
 
@@ -142,7 +143,7 @@ export default function DbSetupPage() {
             {diagnostics.systemMode === 'seed' && (
               <Card className="border-amber-200 bg-amber-50">
                 <CardHeader>
-                  <h2 className="text-xl font-bold text-amber-900">⚠️ Sistema en Modo Semilla</h2>
+                  <h2 className="text-xl font-bold text-amber-900">Sistema en modo semilla</h2>
                 </CardHeader>
                 <CardBody>
                   <p className="text-amber-800 mb-4">
@@ -161,12 +162,12 @@ export default function DbSetupPage() {
                     disabled={!diagnostics.supabaseConfigured}
                     className="w-full"
                   >
-                    🚀 Ejecutar Bootstrap
+                    Ejecutar bootstrap
                   </Button>
 
                   {!diagnostics.supabaseConfigured && (
-                    <p className="text-sm text-amber-700 mt-3">
-                      ⚠️ Supabase debe estar configurado para ejecutar bootstrap
+                    <p className="mt-3 flex items-center gap-1.5 text-sm text-amber-700">
+                      <AlertTriangle size={14} /> Supabase debe estar configurado para ejecutar bootstrap
                     </p>
                   )}
                 </CardBody>
@@ -178,9 +179,9 @@ export default function DbSetupPage() {
               <Card className="border-green-200 bg-green-50">
                 <CardBody>
                   <div className="flex items-center gap-3">
-                    <span className="text-3xl">✅</span>
+                    <CheckCircle2 className="text-green-600" size={28} />
                     <div>
-                      <p className="font-semibold text-green-900">Sistema Operativo</p>
+                      <p className="font-semibold text-green-900">Sistema operativo</p>
                       <p className="text-green-800 text-sm">La base de datos está inicializada y lista para usar</p>
                     </div>
                   </div>

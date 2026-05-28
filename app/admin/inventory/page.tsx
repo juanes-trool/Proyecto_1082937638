@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { Sparkles } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import type { Product, Category } from '@/lib/types';
 
@@ -205,7 +206,7 @@ export default function InventoryPage() {
                         <div className="h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-brand-100 bg-brand-50">
                           {p.image_url
                             ? <img src={p.image_url} alt="" className="h-full w-full object-cover" />
-                            : <div className="flex h-full w-full items-center justify-center text-brand-300">💄</div>}
+                            : <div className="flex h-full w-full items-center justify-center text-brand-300"><Sparkles size={18} /></div>}
                         </div>
                         <div>
                           <p className="font-semibold text-ink">{p.name}</p>
@@ -242,7 +243,7 @@ export default function InventoryPage() {
                 <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-brand-100 bg-brand-50">
                   {imagePreview
                     ? <img src={imagePreview} alt="" className="h-full w-full object-cover" />
-                    : <div className="flex h-full w-full items-center justify-center text-2xl text-brand-300">💄</div>}
+                    : <div className="flex h-full w-full items-center justify-center text-brand-300"><Sparkles size={26} /></div>}
                 </div>
                 <label className="cursor-pointer rounded-lg border border-brand-200 px-3 py-2 text-sm font-semibold text-brand-700 hover:bg-brand-50">
                   {imagePreview ? 'Cambiar imagen' : 'Subir imagen'}

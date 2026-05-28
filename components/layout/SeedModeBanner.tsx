@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 
 export const SeedModeBanner: React.FC = () => {
   const [mode, setMode] = useState<'seed' | 'live' | null>(null);
@@ -27,7 +28,7 @@ export const SeedModeBanner: React.FC = () => {
   return (
     <div className="bg-amber-50 border-b border-amber-200 px-4 py-3 text-amber-800">
       <div className="max-w-7xl mx-auto flex items-center gap-3">
-        <span className="text-xl">⚠️</span>
+        <AlertTriangle size={20} className="shrink-0" />
         <div>
           <p className="font-semibold">Modo Semilla (Demo)</p>
           <p className="text-sm text-amber-700">

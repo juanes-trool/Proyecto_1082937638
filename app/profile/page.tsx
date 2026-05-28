@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Lock } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 
 type Me = {
@@ -73,8 +74,8 @@ export default function ProfilePage() {
         )}
 
         {me?.must_change_password && (
-          <div className="mt-6 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            🔒 Debes cambiar tu contraseña temporal antes de continuar.
+          <div className="mt-6 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <Lock size={15} /> Debes cambiar tu contraseña temporal antes de continuar.
           </div>
         )}
 

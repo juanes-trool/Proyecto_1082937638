@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SystemConfig } from '@/lib/types';
+import { Lightbulb } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -163,9 +164,9 @@ export default function ConfigPage() {
         </form>
       </Card>
 
-      <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h3 className="text-sm font-semibold text-blue-900 mb-2">💡 Tip</h3>
-        <p className="text-sm text-blue-800">
+      <div className="mt-8 flex items-start gap-3 rounded-2xl border border-brand-100 bg-brand-50/50 p-4">
+        <Lightbulb size={18} className="mt-0.5 shrink-0 text-brand-500" />
+        <p className="text-sm text-ink-soft">
           Los cambios de configuración afectan solo a los nuevos productos. Los productos existentes mantienen su stock mínimo personalizado.
         </p>
       </div>

@@ -2,6 +2,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { CheckCircle2, XCircle, Info, AlertTriangle, type LucideIcon } from 'lucide-react';
 
 interface ToastProps {
   message: string;
@@ -36,17 +37,18 @@ export const Toast: React.FC<ToastProps> = ({
     warning: 'bg-amber-50 border-amber-200 text-amber-800',
   };
 
-  const icons = {
-    success: '✓',
-    error: '✕',
-    info: 'ℹ',
-    warning: '!',
+  const icons: Record<string, LucideIcon> = {
+    success: CheckCircle2,
+    error: XCircle,
+    info: Info,
+    warning: AlertTriangle,
   };
+  const Icon = icons[type];
 
   return (
     <div className={`fixed bottom-4 right-4 border ${typeStyles[type]} rounded-lg p-4 shadow-lg max-w-sm`}>
       <div className="flex items-center gap-3">
-        <span className="text-xl font-bold">{icons[type]}</span>
+        <Icon size={18} className="shrink-0" />
         <p>{message}</p>
       </div>
     </div>

@@ -2,6 +2,7 @@
 'use client';
 
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'outline';
@@ -34,7 +35,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={loading || props.disabled}
         {...props}
       >
-        {loading && <span className="animate-spin">⏳</span>}
+        {loading && <Loader2 size={16} className="animate-spin" />}
         {props.children}
       </button>
     );

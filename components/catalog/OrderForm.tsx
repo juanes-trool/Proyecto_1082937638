@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle } from 'lucide-react';
 import { PublicProduct } from '@/lib/types';
 
 type OrderFormProps = {
@@ -110,8 +111,8 @@ export function OrderForm({ product }: OrderFormProps) {
           </span>
         </div>
         {!isQuantityValid && formData.quantity > 0 && (
-          <p className="mt-2 text-sm font-medium text-rose-600">
-            ⚠️ Solo hay {maxQuantity} unidades disponibles
+          <p className="mt-2 flex items-center gap-1.5 text-sm font-medium text-rose-600">
+            <AlertTriangle size={14} /> Solo hay {maxQuantity} unidades disponibles
           </p>
         )}
       </div>
@@ -200,7 +201,7 @@ export function OrderForm({ product }: OrderFormProps) {
             : 'bg-rose-500 text-white hover:bg-rose-600'
         }`}
       >
-        {loading ? 'Procesando...' : '✓ Confirmar pedido'}
+        {loading ? 'Procesando…' : 'Confirmar pedido'}
       </button>
 
       {/* Link volver */}

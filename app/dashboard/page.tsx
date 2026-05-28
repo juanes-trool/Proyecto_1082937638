@@ -1,49 +1,57 @@
-// app/dashboard/page.tsx
-// Main dashboard page
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import {
+  ShoppingCart, Loader2, AlertTriangle, Package, Tags,
+  BarChart3, ArrowRight, Clock,
+} from 'lucide-react';
 import { AppLayout } from '@/components/layout';
-import { Card, CardBody, CardHeader, Button, EmptyState } from '@/components/ui';
-
-interface DashboardData {
-  newOrders: number;
-  inProgressOrders: number;
-  lowStockProducts: number;
-}
+import type { Order, Product } from '@/lib/types';
 
 export default function DashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
+  const [pendientes, setPendientes] = useState(0);
+  const [enProceso, setEnProceso] = useState(0);
+  const [lowStock, setLowStock] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    (async () => {
       try {
-        setLoading(true);
-        // For now, we'll show placeholder data since these endpoints don't exist yet
-        // They'll be implemented in later phases
-        setData({
-          newOrders: 5,
-          inProgressOrders: 3,
-          lowStockProducts: 2,
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        const [oRes, pRes] = await Promise.all([fetch('/api/orders'), fetch('/api/products')]);
+        if (oRes.ok) {
+          const orders: Order[] = (await oRes.json()).data ?? [];
+          setPendientes(orders.filter((o) => o.status === 'pendiente').length);
+          setEnProceso(orders.filter((o) => o.status === 'en_proceso').length);
+        }
+        if (pRes.ok) {
+          const products: Product[] = (await pRes.json()).data ?? [];
+          setLowStock(products.filter((p) => p.current_stock <= p.min_stock).length);
+        }
       } finally {
         setLoading(false);
       }
-    };
-
-    fetchDashboardData();
+    })();
   }, []);
+
+  const stats = [
+    { label: 'Pedidos pendientes', value: pendientes, Icon: ShoppingCart, href: '/admin/orders', accent: '#7C3AED', bg: '#F5F3FF' },
+    { label: 'En proceso', value: enProceso, Icon: Loader2, href: '/admin/orders', accent: '#2563EB', bg: '#EFF6FF' },
+    { label: 'Productos con stock bajo', value: lowStock, Icon: AlertTriangle, href: '/admin/inventory', accent: '#D97706', bg: '#FFFBEB' },
+  ];
+
+  const actions = [
+    { label: 'Inventario', href: '/admin/inventory', Icon: Package },
+    { label: 'Ver pedidos', href: '/admin/orders', Icon: ShoppingCart },
+    { label: 'Categorías', href: '/categories', Icon: Tags },
+    { label: 'Reportes', href: '/admin/reports', Icon: BarChart3 },
+  ];
 
   if (loading) {
     return (
       <AppLayout>
-        <div className="text-center py-12">
-          <p className="text-gray-600">Cargando dashboard...</p>
+        <div className="flex items-center justify-center py-20 text-ink-soft">
+          <Loader2 className="mr-2 animate-spin" size={18} /> Cargando dashboard…
         </div>
       </AppLayout>
     );
@@ -51,121 +59,43 @@ export default function DashboardPage() {
 
   return (
     <AppLayout>
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">📊 Dashboard</h1>
-        <p className="text-gray-600 mb-8">Resumen del estado actual de tu tienda</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-600">Panel interno</p>
+      <h1 className="font-display text-3xl text-brand-900">Resumen de la tienda</h1>
+      <p className="mt-1 text-sm text-ink-soft">Estado actual de pedidos e inventario.</p>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {/* New Orders Card */}
-          <Card>
-            <CardBody>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium">Pedidos Nuevos</p>
-                  <p className="text-4xl font-bold text-gray-900 mt-2">{data?.newOrders || 0}</p>
-                </div>
-                <span className="text-3xl">🆕</span>
-              </div>
-              <p className="text-xs text-gray-500 mt-4">Hoy</p>
-            </CardBody>
-          </Card>
-
-          {/* In Progress Orders Card */}
-          <Card>
-            <CardBody>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium">En Proceso</p>
-                  <p className="text-4xl font-bold text-gray-900 mt-2">{data?.inProgressOrders || 0}</p>
-                </div>
-                <span className="text-3xl">⏳</span>
-              </div>
-              <Link
-                href="/orders"
-                className="text-xs text-pink-600 hover:text-pink-700 font-medium mt-4 inline-block"
-              >
-                Ver todos →
-              </Link>
-            </CardBody>
-          </Card>
-
-          {/* Low Stock Products Card */}
-          <Card>
-            <CardBody>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-600 text-sm font-medium">Stock Bajo</p>
-                  <p className="text-4xl font-bold text-gray-900 mt-2">{data?.lowStockProducts || 0}</p>
-                </div>
-                <span className="text-3xl">⚠️</span>
-              </div>
-              <Link
-                href="/inventory"
-                className="text-xs text-pink-600 hover:text-pink-700 font-medium mt-4 inline-block"
-              >
-                Revisar inventario →
-              </Link>
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-bold">⚡ Acciones Rápidas</h2>
-          </CardHeader>
-          <CardBody>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Link
-                href="/inventory/new"
-                className="p-4 bg-gradient-to-br from-pink-50 to-fuchsia-50 border border-pink-200 rounded-lg hover:shadow-md transition-all text-center group"
-              >
-                <p className="text-2xl mb-2">➕</p>
-                <p className="text-sm font-medium text-gray-900 group-hover:text-pink-600">Nuevo Producto</p>
-              </Link>
-
-              <Link
-                href="/orders"
-                className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-lg hover:shadow-md transition-all text-center group"
-              >
-                <p className="text-2xl mb-2">🛒</p>
-                <p className="text-sm font-medium text-gray-900 group-hover:text-blue-600">Ver Pedidos</p>
-              </Link>
-
-              <Link
-                href="/inventory"
-                className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-lg hover:shadow-md transition-all text-center group"
-              >
-                <p className="text-2xl mb-2">📦</p>
-                <p className="text-sm font-medium text-gray-900 group-hover:text-amber-600">Inventario</p>
-              </Link>
-
-              <Link
-                href="/admin/db-setup"
-                className="p-4 bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 rounded-lg hover:shadow-md transition-all text-center group"
-              >
-                <p className="text-2xl mb-2">⚙️</p>
-                <p className="text-sm font-medium text-gray-900 group-hover:text-gray-700">Configuración</p>
-              </Link>
+      <div className="mt-8 grid gap-5 sm:grid-cols-3">
+        {stats.map(({ label, value, Icon, href, accent, bg }) => (
+          <Link key={label} href={href} className="group rounded-2xl border border-brand-100 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+            <div className="flex items-start justify-between">
+              <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: bg, color: accent }}>
+                <Icon size={20} />
+              </span>
+              <ArrowRight size={18} className="text-brand-200 transition group-hover:text-brand-500" />
             </div>
-          </CardBody>
-        </Card>
+            <p className="mt-4 font-display text-4xl text-brand-900">{value}</p>
+            <p className="mt-1 text-sm text-ink-soft">{label}</p>
+          </Link>
+        ))}
+      </div>
 
-        {/* Placeholder for Future Features */}
-        <Card className="mt-8 bg-blue-50 border-blue-200">
-          <CardBody>
-            <div className="flex items-start gap-4">
-              <span className="text-3xl">💡</span>
-              <div>
-                <p className="font-semibold text-blue-900">Información</p>
-                <p className="text-sm text-blue-800 mt-1">
-                  El dashboard completo estará disponible en la Fase 5 con gráficos de vendidores, análisis de tendencias y más.
-                </p>
-              </div>
-            </div>
-          </CardBody>
-        </Card>
+      <h2 className="mt-10 font-display text-xl text-brand-900">Accesos rápidos</h2>
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {actions.map(({ label, href, Icon }) => (
+          <Link key={label} href={href} className="flex items-center gap-3 rounded-2xl border border-brand-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-md">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+              <Icon size={18} />
+            </span>
+            <span className="text-sm font-semibold text-ink">{label}</span>
+          </Link>
+        ))}
+      </div>
+
+      <div className="mt-8 flex items-start gap-3 rounded-2xl border border-brand-100 bg-brand-50/50 p-5">
+        <Clock size={18} className="mt-0.5 shrink-0 text-brand-500" />
+        <p className="text-sm text-ink-soft">
+          Los pedidos nuevos del catálogo público entran como <strong className="text-ink">pendientes</strong>.
+          Gestiónalos desde <Link href="/admin/orders" className="font-semibold text-brand-700 underline-offset-2 hover:underline">Pedidos</Link>.
+        </p>
       </div>
     </AppLayout>
   );

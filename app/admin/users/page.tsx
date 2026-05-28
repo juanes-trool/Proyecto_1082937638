@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SafeUser } from '@/lib/types';
+import { AlertTriangle } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -260,7 +261,7 @@ export default function UsersPage() {
           setShowCreateModal(false);
           setTempPassword(null);
         }}
-        title={tempPassword ? '✅ Usuario Creado' : 'Crear Nuevo Usuario'}
+        title={tempPassword ? 'Usuario creado' : 'Crear nuevo usuario'}
       >
         {tempPassword ? (
           <div className="space-y-4">
@@ -270,8 +271,8 @@ export default function UsersPage() {
             <div className="bg-gray-100 p-4 rounded border-l-4 border-green-500 font-mono text-lg break-all">
               {tempPassword}
             </div>
-            <p className="text-gray-600 text-sm">
-              ⚠️ Comparte esta contraseña con el usuario. El usuario debe cambiarla en su primer login.
+            <p className="flex items-center gap-1.5 text-gray-600 text-sm">
+              <AlertTriangle size={14} /> Comparte esta contraseña con el usuario. Deberá cambiarla en su primer ingreso.
             </p>
           </div>
         ) : (

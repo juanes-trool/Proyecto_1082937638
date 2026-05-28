@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { Button } from './Button';
+import { X } from 'lucide-react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -47,8 +47,9 @@ export const Modal: React.FC<ModalProps> = ({
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 transition-colors"
+            aria-label="Cerrar"
           >
-            ✕
+            <X size={18} />
           </button>
         </div>
 

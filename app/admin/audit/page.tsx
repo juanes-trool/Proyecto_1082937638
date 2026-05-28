@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuditEntry } from '@/lib/types';
+import { AppLayout } from '@/components/layout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Table } from '@/components/ui/Table';
@@ -86,11 +87,13 @@ export default function AuditPage() {
   };
 
   return (
-    <div className="p-8 max-w-7xl">
+    <AppLayout>
+      <div className="max-w-7xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Auditoría del Sistema</h1>
-        <p className="text-gray-600">
-          Registro de todas las acciones realizadas en el sistema.
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-600">Panel interno</p>
+        <h1 className="font-display text-3xl text-brand-900">Auditoría del sistema</h1>
+        <p className="mt-1 text-sm text-ink-soft">
+          Registro de todas las acciones realizadas (almacenado en Supabase).
         </p>
       </div>
 
@@ -184,6 +187,7 @@ export default function AuditPage() {
           </div>
         </Card>
       )}
-    </div>
+      </div>
+    </AppLayout>
   );
 }

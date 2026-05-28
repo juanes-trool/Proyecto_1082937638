@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { Sparkles } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -67,7 +68,7 @@ export default function LoginPage() {
         {/* Tarjeta */}
         <div className="card-elevated card-topline p-8 animate-rise" style={{ animationDelay: '0.08s' }}>
           <h2 className="font-display text-2xl text-brand-900 mb-1">Iniciar sesión</h2>
-          <p className="text-sm text-ink-soft mb-6">Bienvenido de vuelta ✨</p>
+          <p className="mb-6 flex items-center gap-1.5 text-sm text-ink-soft">Bienvenido de vuelta <Sparkles size={14} className="text-accent-500" /></p>
 
           {error && (
             <div className="mb-4 px-4 py-3 rounded-xl bg-brand-50 border border-brand-200 text-brand-700 text-sm animate-fade">
