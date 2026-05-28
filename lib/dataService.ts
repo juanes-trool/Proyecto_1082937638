@@ -1,7 +1,6 @@
 ﻿// lib/dataService.ts
 // Capa de datos unificada — UNICO punto de acceso a datos del SGIB
 import { supabaseClient, supabaseServiceClient, isSupabaseConfigured } from './supabase';
-import { isDatabaseInitialized } from './pgMigrate';
 import { getSeedUsers, getSeedSystemConfig, getSeedCategories } from './seedReader';
 import { recordAuditEntry } from './auditService';
 import { uploadProductImage, deleteProductImage } from './imageStorage';
@@ -21,9 +20,15 @@ export const getSystemMode = async (): Promise<'seed' | 'live'> => {
     systemMode = 'seed';
     return systemMode;
   }
+  // Detección vía supabase-js (HTTPS) — fiable en serverless/Vercel, a diferencia
+  // de una conexión `pg` cruda que puede fallar en cold starts. Si la tabla
+  // `_migrations` responde sin error, la base ya está inicializada (modo live).
   try {
-    const initialized = await isDatabaseInitialized();
-    systemMode = initialized ? 'live' : 'seed';
+    const { error } = await supabaseServiceClient
+      .from('_migrations')
+      .select('filename')
+      .limit(1);
+    systemMode = error ? 'seed' : 'live';
     return systemMode;
   } catch {
     systemMode = 'seed';

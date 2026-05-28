@@ -4,7 +4,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sidebar } from './Sidebar';
-import { SeedModeBanner } from './SeedModeBanner';
 import type { AuthPayload } from '@/lib/types';
 
 interface AppLayoutProps {
@@ -73,9 +72,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
 
       {/* Columna de contenido */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Banner modo seed — aparece solo si el sistema está en seed */}
-        <SeedModeBanner />
-
         {/* Header */}
         <header className="bg-white border-b px-6 py-3 flex items-center justify-between shrink-0" style={{ borderColor: '#FCE7F3' }}>
           <p className="text-sm text-gray-500">
