@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
         email: user.email,
         name: user.name,
         role: user.role,
+        must_change_password: user.must_change_password,
       },
     });
 

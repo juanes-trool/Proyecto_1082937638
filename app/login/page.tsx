@@ -26,7 +26,8 @@ export default function LoginPage() {
         setError(data.error || 'No fue posible iniciar sesión');
         return;
       }
-      router.push('/dashboard');
+      // Si tiene contraseña temporal, forzar cambio (RF/6.1)
+      router.push(data.user?.must_change_password ? '/profile' : '/dashboard');
     } catch {
       setError('Ocurrió un error. Inténtalo de nuevo.');
     } finally {

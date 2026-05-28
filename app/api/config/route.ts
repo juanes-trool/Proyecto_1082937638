@@ -59,7 +59,7 @@ export const PATCH = async (request: NextRequest): Promise<NextResponse> => {
       }
 
       // Actualizar configuración
-      const userId = (authRequest as any).user?.id;
+      const userId = authRequest.user!.userId;
       const updated = await updateSystemConfig(userId, default_min_stock);
       
       if (!updated) {

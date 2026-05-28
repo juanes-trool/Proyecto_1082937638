@@ -4,7 +4,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withRole, AuthenticatedRequest } from '@/lib/withAuth';
 import {
-  getInventoryReportData,
+  getInventory,
+  getCategories,
   getTopProductsData,
   getOrdersByPeriodData,
 } from '@/lib/dataService';
@@ -49,14 +50,13 @@ export const GET = async (request: NextRequest): Promise<NextResponse> => {
       let filename: string;
 
       if (type === 'inventory') {
-        // Reporte de inventario
-        const inventoryData = await getInventoryReportData();
-        const categoriesMap = inventoryData.reduce(
-          (acc, row) => ({ ...acc, [row.id]: row.category_name }),
-          {} as Record<string, string>
-        );
+        // Reporte de inventario — generateInventoryCSV espera ProductWithStatus[]
+        // (con is_active y category_id) + mapa id_categoría -> nombre.
+        const products = await getInventory();
+        const cats = await getCategories();
+        const categoriesMap = Object.fromEntries(cats.map((c) => [c.id, c.name]));
 
-        csvContent = await generateInventoryCSV(inventoryData as any, categoriesMap);
+        csvContent = await generateInventoryCSV(products, categoriesMap);
         filename = generateReportFilename('inventory');
       } else if (type === 'top-products') {
         // Reporte de top productos

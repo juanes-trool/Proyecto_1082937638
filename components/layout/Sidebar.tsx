@@ -24,6 +24,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Pedidos',      href: '/admin/orders',    icon: '🛒', roles: ['admin', 'empleado'] },
   { label: 'Categorías',   href: '/categories',      icon: '🏷️', roles: ['admin'] },
   { label: 'Reportes',     href: '/admin/reports',   icon: '📈', roles: ['admin'] },
+  { label: 'Perfil',       href: '/profile',         icon: '👤', roles: ['admin', 'empleado'] },
   { label: 'Configuración', href: '/config',         icon: '⚙️', roles: ['admin'] },
   { label: 'Usuarios',     href: '/admin/users',     icon: '👥', roles: ['admin'] },
   { label: 'Auditoría',    href: '/admin/audit',     icon: '🔍', roles: ['admin'] },

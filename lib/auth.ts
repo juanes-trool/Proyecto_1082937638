@@ -82,14 +82,12 @@ export const validatePasswordStrength = (password: string): {
 } => {
   const errors: string[] = [];
 
+  // RNF-05: mínimo 8 caracteres, al menos una letra y un número
   if (password.length < 8) {
     errors.push('La contraseña debe tener al menos 8 caracteres');
   }
-  if (!/[A-Z]/.test(password)) {
-    errors.push('La contraseña debe contener al menos una mayúscula');
-  }
-  if (!/[a-z]/.test(password)) {
-    errors.push('La contraseña debe contener al menos una minúscula');
+  if (!/[a-zA-Z]/.test(password)) {
+    errors.push('La contraseña debe contener al menos una letra');
   }
   if (!/[0-9]/.test(password)) {
     errors.push('La contraseña debe contener al menos un número');

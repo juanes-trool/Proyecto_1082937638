@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SafeUser } from '@/lib/types';
+import { AppLayout } from '@/components/layout';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Table } from '@/components/ui/Table';
@@ -160,16 +161,17 @@ export default function UsersPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <AppLayout>
         <div className="text-center py-12">
           <div className="text-gray-500">Cargando usuarios...</div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="p-8 max-w-6xl">
+    <AppLayout>
+      <div className="max-w-6xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Gestión de Usuarios</h1>
         <p className="text-gray-600">
@@ -424,6 +426,7 @@ export default function UsersPage() {
           </div>
         </div>
       </Modal>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

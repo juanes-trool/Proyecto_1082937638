@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SystemConfig } from '@/lib/types';
+import { AppLayout } from '@/components/layout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 
@@ -69,16 +70,17 @@ export default function ConfigPage() {
 
   if (loading) {
     return (
-      <div className="p-8">
+      <AppLayout>
         <div className="text-center py-12">
           <div className="text-gray-500">Cargando configuración...</div>
         </div>
-      </div>
+      </AppLayout>
     );
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <AppLayout>
+      <div className="max-w-2xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Configuración del Sistema</h1>
         <p className="text-gray-600">
@@ -167,6 +169,7 @@ export default function ConfigPage() {
           Los cambios de configuración afectan solo a los nuevos productos. Los productos existentes mantienen su stock mínimo personalizado.
         </p>
       </div>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

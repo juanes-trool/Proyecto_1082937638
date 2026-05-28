@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyJWT } from '@/lib/auth';
 import { findUserById, updateUserPassword } from '@/lib/dataService';
-import { hashPassword, verifyPassword } from '@/lib/auth';
+import { hashPassword, verifyPassword, validatePasswordStrength } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,7 +37,16 @@ export async function POST(request: NextRequest) {
 
     if (currentPassword === newPassword) {
       return NextResponse.json(
-        { success: false, error: 'New password must be different' },
+        { success: false, error: 'La nueva contraseña debe ser diferente' },
+        { status: 400 }
+      );
+    }
+
+    // RNF-05: mínimo 8 caracteres, al menos una letra y un número
+    const strength = validatePasswordStrength(newPassword);
+    if (!strength.valid) {
+      return NextResponse.json(
+        { success: false, error: strength.errors[0] },
         { status: 400 }
       );
     }
