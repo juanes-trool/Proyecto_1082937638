@@ -13,6 +13,9 @@ const PUBLIC_PREFIXES = [
   '/catalog',       // /catalog y /catalog/*
   '/order',         // /order/* (formulario de pedido)
   '/api/public',    // /api/public/* (catálogo + pedido públicos)
+  '/api/system',    // bootstrap/diagnose/mode — protegidos por su propio token
+  '/api/auth/login',   // emitir sesión (no puede exigir token previo)
+  '/api/auth/logout',  // cerrar sesión
   '/login',
   '/_next',
   '/favicon.ico',
@@ -20,10 +23,16 @@ const PUBLIC_PREFIXES = [
 ];
 
 /**
- * Rutas exclusivas del admin
+ * Rutas exclusivas del admin.
+ * OJO: NO incluir '/admin' a secas — inventario y pedidos viven en
+ * /admin/inventory y /admin/orders y el empleado SÍ debe acceder (RF-13).
+ * Se listan solo los subpaths realmente exclusivos del admin.
  */
 const ADMIN_PREFIXES = [
-  '/admin',
+  '/admin/reports',
+  '/admin/users',
+  '/admin/audit',
+  '/admin/db-setup',
   '/reports',
   '/categories',
   '/config',

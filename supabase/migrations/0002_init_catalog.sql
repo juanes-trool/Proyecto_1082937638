@@ -25,9 +25,14 @@ CREATE TABLE IF NOT EXISTS products (
   created_by    UUID          REFERENCES users(id) ON DELETE SET NULL,
   updated_by    UUID          REFERENCES users(id) ON DELETE SET NULL,
   created_at    TIMESTAMPTZ   DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ   DEFAULT NOW(),
-  UNIQUE (category_id, LOWER(name))                                      -- RN-01: nombre único por categoría
+  updated_at    TIMESTAMPTZ   DEFAULT NOW()
 );
+
+-- RN-01: nombre único por categoría (case-insensitive).
+-- Postgres NO permite expresiones en un constraint UNIQUE de tabla,
+-- por eso se implementa como índice único funcional.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_products_category_lower_name
+  ON products (category_id, LOWER(name));
 
 -- Índices de rendimiento
 CREATE INDEX IF NOT EXISTS idx_products_category  ON products(category_id, is_active);

@@ -1,6 +1,4 @@
-// app/login/page.tsx
-// Login page with SGIB branding
-
+// app/login/page.tsx — Acceso al panel SGIB (boutique de belleza editorial)
 'use client';
 
 import React, { useState } from 'react';
@@ -17,97 +15,99 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     setLoading(true);
-
     try {
-      const response = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
-
-      const data = await response.json();
-
+      const data = await res.json();
       if (!data.success) {
-        setError(data.error || 'Login failed');
+        setError(data.error || 'No fue posible iniciar sesión');
         return;
       }
-
-      // Login successful, redirect to dashboard
       router.push('/dashboard');
-    } catch (err) {
-      setError('An error occurred. Please try again.');
-      console.error('Login error:', err);
+    } catch {
+      setError('Ocurrió un error. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-fuchsia-50 to-purple-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo / Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-pink-500 to-fuchsia-600 mb-4">
-            <span className="text-2xl">✨</span>
+    <div className="bg-boutique grain relative min-h-screen flex items-center justify-center p-4 overflow-hidden">
+      <div className="relative z-10 w-full max-w-sm">
+        {/* Marca */}
+        <div className="text-center mb-7 animate-rise">
+          <div className="inline-flex items-center justify-center mb-4">
+            <svg width="58" height="58" viewBox="0 0 48 48" fill="none" aria-hidden="true"
+                 className="drop-shadow-[0_8px_18px_rgba(244,63,94,0.45)]">
+              <rect x="13" y="19" width="22" height="24" rx="5" fill="#F43F5E" />
+              <rect x="13" y="19" width="22" height="24" rx="5" fill="url(#g)" fillOpacity="0.35" />
+              <rect x="18" y="12" width="12" height="8" rx="2" fill="#E11D48" />
+              <rect x="16" y="7" width="16" height="5" rx="2.5" fill="#9F1239" />
+              <rect x="18" y="24" width="5" height="12" rx="2.5" fill="#fff" fillOpacity="0.45" />
+              <defs>
+                <linearGradient id="g" x1="13" y1="19" x2="35" y2="43" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#fff" stopOpacity="0.6" />
+                  <stop offset="1" stopColor="#D946EF" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">SGIB</h1>
-          <p className="text-gray-600 mt-1">Sistema de Gestión de Inventario de Belleza</p>
+          <h1 className="font-display text-5xl font-semibold tracking-tight text-brand-900 leading-none">
+            SGIB
+          </h1>
+          <p className="mt-2 text-sm text-ink-soft">
+            Gestión de inventario de belleza
+          </p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Iniciar sesión</h2>
+        {/* Tarjeta */}
+        <div className="card-elevated card-topline p-8 animate-rise" style={{ animationDelay: '0.08s' }}>
+          <h2 className="font-display text-2xl text-brand-900 mb-1">Iniciar sesión</h2>
+          <p className="text-sm text-ink-soft mb-6">Bienvenido de vuelta ✨</p>
 
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            <div className="mb-4 px-4 py-3 rounded-xl bg-brand-50 border border-brand-200 text-brand-700 text-sm animate-fade">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wide text-ink-soft mb-1.5">
                 Correo electrónico
               </label>
               <input
-                type="email"
-                id="email"
-                value={email}
+                id="email" type="email" value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="admin@sgib.com"
-                required
+                className="field" placeholder="admin@sgib.com" required
               />
             </div>
-
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wide text-ink-soft mb-1.5">
                 Contraseña
               </label>
               <input
-                type="password"
-                id="password"
-                value={password}
+                id="password" type="password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="••••••••"
-                required
+                className="field" placeholder="••••••••" required
               />
             </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-pink-500 to-fuchsia-600 hover:from-pink-600 hover:to-fuchsia-700 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+            <button type="submit" disabled={loading} className="btn-brand w-full mt-2">
+              {loading ? 'Iniciando sesión…' : 'Entrar al panel'}
             </button>
           </form>
 
-          <p className="text-center text-xs text-gray-500 mt-6">
-            <strong>Demo:</strong> admin@sgib.com / admin123
+          <p className="text-center text-xs text-ink-soft mt-6 pt-5 border-t border-brand-100">
+            Demo · <span className="font-medium text-brand-700">admin@sgib.com</span> / admin123
           </p>
         </div>
+
+        <p className="text-center text-xs text-ink-soft/70 mt-6 animate-fade" style={{ animationDelay: '0.2s' }}>
+          Catálogo público disponible sin iniciar sesión
+        </p>
       </div>
     </div>
   );

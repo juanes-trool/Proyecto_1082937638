@@ -19,6 +19,6 @@ export const getDatabaseUrl = () => {
   return process.env.DATABASE_URL || '';
 };
 
-export const isSupabaseConfigured = () => {
-  return supabaseUrl && supabaseAnonKey && supabaseServiceRoleKey;
+export const isSupabaseConfigured = (): boolean => {
+  return Boolean(supabaseUrl && supabaseAnonKey && supabaseServiceRoleKey);
 };

@@ -3,8 +3,8 @@
 import { supabaseClient, supabaseServiceClient, isSupabaseConfigured } from './supabase';
 import { isDatabaseInitialized } from './pgMigrate';
 import { getSeedUsers, getSeedSystemConfig, getSeedCategories } from './seedReader';
-import { recordAuditEntry } from './blobAudit';
-import { uploadProductImage, deleteProductImage } from './blobImages';
+import { recordAuditEntry } from './auditService';
+import { uploadProductImage, deleteProductImage } from './imageStorage';
 import {
   User, SafeUser, Category, SystemConfig, AuditEntry,
   Product, ProductWithStatus, PublicProduct,
@@ -260,6 +260,16 @@ const toProductWithStatus = (p: Product): ProductWithStatus => ({
   is_available: p.current_stock > 0, // RN-04: calculado, nunca en DB
 });
 
+// Supabase devuelve la relación embebida `categories` como objeto (FK uno-a-muchos)
+// o como array según el caso; este helper extrae el nombre en ambos.
+const extractCategoryName = (c: unknown): string => {
+  if (Array.isArray(c)) return c[0]?.name ?? '';
+  if (c && typeof c === 'object' && 'name' in c) {
+    return (c as { name?: string }).name ?? '';
+  }
+  return '';
+};
+
 // ---------------------------------------------------------------------------
 // CATÁLOGO PÚBLICO (sin autenticación)
 // ---------------------------------------------------------------------------
@@ -295,7 +305,7 @@ export const getPublicCatalog = async (categoryId?: string): Promise<PublicProdu
     price: p.price,
     image_url: p.image_url,
     category_id: p.category_id,
-    category_name: Array.isArray(p.categories) ? (p.categories[0]?.name ?? '') : '',
+    category_name: extractCategoryName(p.categories),
     is_available: p.current_stock > 0,
     current_stock: p.current_stock,
   }));
@@ -332,7 +342,7 @@ export const getPublicProductById = async (id: string): Promise<PublicProduct | 
     price: p.price,
     image_url: p.image_url,
     category_id: p.category_id,
-    category_name: Array.isArray(p.categories) ? (p.categories[0]?.name ?? '') : '',
+    category_name: extractCategoryName(p.categories),
     is_available: p.current_stock > 0,
     current_stock: p.current_stock,
   };
@@ -545,20 +555,10 @@ export const getLowStockProducts = async (): Promise<ProductWithStatus[]> => {
   const mode = await getSystemMode();
   if (mode === 'seed') return [];
 
-  const { data, error } = await supabaseClient
-    .from('products')
-    .select('*')
-    .eq('is_active', true)
-    .filter('current_stock', 'lte', supabaseClient.from('products').select('min_stock'))
-    .order('current_stock', { ascending: true });
-
-  if (error || !data) {
-    // Fallback: obtener todos y filtrar
-    const all = await getInventory();
-    return all.filter((p) => p.current_stock <= p.min_stock);
-  }
-
-  return (data as Product[]).map(toProductWithStatus);
+  // Postgres no permite comparar dos columnas con el filtro de PostgREST,
+  // así que se evalúa current_stock <= min_stock en memoria.
+  const all = await getInventory();
+  return all.filter((p) => p.current_stock <= p.min_stock);
 };
 
 // ---------------------------------------------------------------------------
@@ -572,7 +572,7 @@ export const recordAudit = async (entry: AuditEntry): Promise<void> => {
   }
 };
 export const readAuditMonth = async (yyyymm: string): Promise<AuditEntry[]> => {
-  const { getAuditLog } = await import('./blobAudit');
+  const { getAuditLog } = await import('./auditService');
   return getAuditLog(yyyymm) as Promise<AuditEntry[]>;
 };
 // ---------------------------------------------------------------------------
@@ -585,7 +585,7 @@ export const getOrders = async (filters?: OrderFilters): Promise<Order[]> => {
   const mode = await getSystemMode();
   if (mode === 'seed') return [];
 
-  let query = supabaseClient.from('orders').select('*').eq('is_active', true);
+  let query = supabaseClient.from('orders').select('*');
 
   if (filters?.status) {
     query = query.eq('status', filters.status);
@@ -662,7 +662,6 @@ export const getOrdersByPeriodData = async (
     .select('created_at, product_name_snapshot, customer_name, quantity, unit_price_snapshot, total')
     .gte('created_at', `${from}T00:00:00Z`)
     .lte('created_at', `${to}T23:59:59Z`)
-    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
   if (error || !data) {
@@ -714,7 +713,6 @@ export const getTopProductsData = async (
     .select('product_name_snapshot, quantity, customer_name, unit_price_snapshot, total, created_at')
     .gte('created_at', `${from}T00:00:00Z`)
     .lte('created_at', `${to}T23:59:59Z`)
-    .eq('is_active', true)
     .order('created_at', { ascending: false });
 
   if (error || !data) {

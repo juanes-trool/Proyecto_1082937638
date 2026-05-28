@@ -1,10 +1,19 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+// Display serif con carácter editorial (títulos y marca)
+const fraunces = Fraunces({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-display",
+  display: "swap",
+  axes: ["opsz", "SOFT"],
+});
+
+// Sans refinada para el cuerpo (no Inter)
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -15,14 +24,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es" className={inter.variable}>
-      <body style={{ fontFamily: "var(--font-inter, Inter, system-ui, sans-serif)" }}>
-        {children}
-      </body>
+    <html lang="es" className={`${fraunces.variable} ${jakarta.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }

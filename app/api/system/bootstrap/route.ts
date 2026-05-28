@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { runMigrations } from '@/lib/pgMigrate';
-import { resetSystemMode } from '@/lib/dataService';
+import { resetSystemMode, recordAudit } from '@/lib/dataService';
 import { getSeedUsers, getSeedSystemConfig, getSeedCategories } from '@/lib/seedReader';
 import { supabaseServiceClient } from '@/lib/supabase';
 
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       if (user) {
         const { error } = await supabaseServiceClient
           .from('users')
-          .upsert([
+          .upsert(
             {
               email: user.email,
               password_hash: user.password_hash,
@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
               role: user.role,
               must_change_password: user.must_change_password || false,
             },
-          ]);
+            { onConflict: 'email' }
+          );
 
         if (error) {
           console.error('Error inserting seed user:', error);
@@ -52,30 +53,51 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Insert system config
-    const config = getSeedSystemConfig();
-    for (const [key, value] of Object.entries(config)) {
-      await supabaseServiceClient
-        .from('system_config')
-        .upsert([
-          {
-            key,
-            value: JSON.stringify(value),
-          },
-        ]);
+    // Insert system config (fila única: { default_min_stock })
+    const config = getSeedSystemConfig() as { default_min_stock?: number };
+    const { error: configError } = await supabaseServiceClient
+      .from('system_config')
+      .upsert(
+        { id: 1, default_min_stock: config.default_min_stock ?? 5 },
+        { onConflict: 'id' }
+      );
+    if (configError) {
+      console.error('Error inserting system config:', configError);
     }
 
-    // Insert categories
+    // Insert categories (idempotente por name UNIQUE)
     const categories = getSeedCategories();
     if (categories.length > 0) {
       const { error: categoryError } = await supabaseServiceClient
         .from('categories')
-        .upsert(categories.map((cat) => ({ name: cat.name, description: cat.description })));
+        .upsert(
+          categories.map((cat) => ({ name: cat.name, description: cat.description })),
+          { onConflict: 'name' }
+        );
 
       if (categoryError) {
         console.error('Error inserting seed categories:', categoryError);
       }
     }
+
+    // Crear el bucket público de imágenes de producto (idempotente)
+    const { error: bucketError } = await supabaseServiceClient.storage.createBucket(
+      'product-images',
+      { public: true }
+    );
+    if (bucketError && !/already exists/i.test(bucketError.message)) {
+      console.error('Error creando bucket de imágenes:', bucketError.message);
+    }
+
+    // Registrar el bootstrap en auditoría (Supabase)
+    await recordAudit({
+      id: '',
+      timestamp: new Date().toISOString(),
+      user_role: 'admin',
+      action: 'bootstrap',
+      entity: 'system',
+      summary: `Bootstrap ejecutado: ${migrationResult.message}`,
+    });
 
     // Reset system mode cache so it detects live mode
     resetSystemMode();

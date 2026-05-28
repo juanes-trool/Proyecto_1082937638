@@ -16,8 +16,18 @@ const getMigrationsDir = () => {
  */
 export const getMigrationFiles = (): string[] => {
   // This would normally use fs.readdirSync, but for now we hardcode known migrations
-  return ['0001_init_users.sql', '0002_init_catalog.sql', '0003_init_orders.sql'];
+  return [
+    '0001_init_users.sql',
+    '0002_init_catalog.sql',
+    '0003_init_orders.sql',
+    '0004_init_audit.sql',
+  ];
 };
+
+// Supabase usa certificados administrados; con sslmode=require las versiones
+// recientes de `pg` aplican verify-full y rechazan el cert. Forzamos TLS
+// sin verificación de cadena para que las migraciones conecten.
+const PG_SSL = { rejectUnauthorized: false } as const;
 
 /**
  * Read a migration file content
@@ -80,7 +90,7 @@ export const runMigrations = async (): Promise<{ success: boolean; message: stri
     };
   }
 
-  const pool = new Pool({ connectionString: databaseUrl });
+  const pool = new Pool({ connectionString: databaseUrl, ssl: PG_SSL });
 
   try {
     console.log('Starting migrations...');
@@ -139,7 +149,7 @@ export const isDatabaseInitialized = async (): Promise<boolean> => {
     return false;
   }
 
-  const pool = new Pool({ connectionString: databaseUrl });
+  const pool = new Pool({ connectionString: databaseUrl, ssl: PG_SSL });
 
   try {
     const result = await pool.query(`

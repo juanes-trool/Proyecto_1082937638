@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { PublicProduct } from '@/lib/types';
 
 const priceFormatter = new Intl.NumberFormat('es-CO', {
@@ -59,13 +60,18 @@ export function ProductCard({ product }: ProductCardProps) {
               {priceFormatter.format(product.price)}
             </p>
           </div>
-          <button
-            type="button"
-            disabled={!product.is_available}
-            className="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
-          >
-            Pedir ahora
-          </button>
+          {product.is_available ? (
+            <Link
+              href={`/order/${product.id}`}
+              className="rounded-full bg-rose-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-rose-200 transition hover:bg-rose-600"
+            >
+              Pedir ahora
+            </Link>
+          ) : (
+            <span className="cursor-not-allowed rounded-full bg-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-500">
+              Sin stock
+            </span>
+          )}
         </div>
       </div>
     </article>

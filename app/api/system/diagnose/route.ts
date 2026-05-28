@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSystemHealth } from '@/lib/dataService';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { isDatabaseInitialized } from '@/lib/pgMigrate';
-import { isBlobConfigured } from '@/lib/blobAudit';
+import { isAuditConfigured } from '@/lib/auditService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
         systemMode: health.mode,
         supabaseConfigured: isSupabaseConfigured(),
         databaseInitialized: dbInit,
-        blobConfigured: isBlobConfigured(),
+        auditConfigured: isAuditConfigured(),
         categoriesCount: health.categories,
         defaultMinStock: health.defaultMinStock,
       },
