@@ -21,6 +21,15 @@ export async function GET(request: NextRequest) {
         auditConfigured: isAuditConfigured(),
         categoriesCount: health.categories,
         defaultMinStock: health.defaultMinStock,
+        // Presencia de variables (solo booleanos, sin exponer valores)
+        env: {
+          NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+          SUPABASE_URL: !!process.env.SUPABASE_URL,
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          SUPABASE_ANON_KEY: !!process.env.SUPABASE_ANON_KEY,
+          SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+          DATABASE_URL: !!process.env.DATABASE_URL,
+        },
       },
     });
   } catch (error) {
