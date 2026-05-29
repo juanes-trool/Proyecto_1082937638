@@ -5,7 +5,12 @@ import { Pool } from 'pg';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 
-const getDatabaseUrl = () => process.env.DATABASE_URL || '';
+// Acepta DATABASE_URL o los nombres que inyecta la integración Supabase de Vercel.
+const getDatabaseUrl = () =>
+  process.env.DATABASE_URL ||
+  process.env.POSTGRES_URL_NON_POOLING ||
+  process.env.POSTGRES_URL ||
+  '';
 
 const getMigrationsDir = () => {
   return join(process.cwd(), 'supabase', 'migrations');

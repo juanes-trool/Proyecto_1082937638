@@ -19,9 +19,14 @@ const safeServiceRoleKey = supabaseServiceRoleKey || 'placeholder-service-role-k
 export const supabaseClient = createClient(safeSupabaseUrl, safeAnonKey);
 export const supabaseServiceClient = createClient(safeSupabaseUrl, safeServiceRoleKey);
 
-// Get the connection string for migrations
+// Get the connection string for migrations (acepta los nombres de la integración Vercel)
 export const getDatabaseUrl = () => {
-  return process.env.DATABASE_URL || '';
+  return (
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL_NON_POOLING ||
+    process.env.POSTGRES_URL ||
+    ''
+  );
 };
 
 export const isSupabaseConfigured = (): boolean => {
